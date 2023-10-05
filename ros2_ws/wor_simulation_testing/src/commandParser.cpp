@@ -40,7 +40,8 @@ int CommandParser::parseIntAfterChar(char delimiter, bool &isValid, std::string 
     // std::cout << "finding " << delimiter << " in " << messageString << std::endl;
     int iterator = messageString.find(delimiter);
     // std::cout << "found " << delimiter << " at " << iterator << std::endl;
-    if(iterator == -1){
+    if (iterator == -1)
+    {
         isValid = false;
         return -1;
     }
@@ -95,4 +96,68 @@ int CommandParser::getDuration(std::string &messageString, bool &isChannel)
 int CommandParser::getSpeed(std::string &messageString, bool &isChannel)
 {
     return parseIntAfterChar('S', isChannel, messageString);
+}
+
+CommandParser::ServoCommand CommandParser::parseServoCommand(std::string &messageString, bool &isValid, bool &usingDuration)
+{
+    ServoCommand command;
+    isValid = false;
+    command.channel = getChannel(messageString, isValid);
+    if (!isValid)
+    {
+        return command;
+    }
+    command.pulseWidth = getPulseWidth(messageString, isValid);
+    if (!isValid)
+    {
+        return command;
+    }
+    command.speed = getSpeed(messageString, isValid);
+    if (!isValid && !usingDuration)
+    {
+        isValid = false;
+        return command;
+    }
+    command.usingSpeed = isValid;
+
+    isValid = true;
+    return command;
+}
+
+CommandParser::CompleteCommand CommandParser::parseCompleteCommand(std::string &messageString, bool &isValid)
+{
+    CommandParser::CompleteCommand command;
+
+    bool usingDuration = false;
+    int duration = getDuration(messageString, usingDuration);
+
+    if (usingDuration)
+    {
+        command.duration = duration;
+        command.usingDuration = true;
+    }
+    else
+    {
+        command.duration = -1;
+        command.usingDuration = false;
+    }
+
+    std::vector<std::string> servoCommands = splitCommands(messageString);
+
+    for (std::string servoCommand : servoCommands)
+    {
+        bool isValid = true;
+        auto parsedCommand = parseServoCommand(servoCommand, isValid, usingDuration);
+        if (isValid)
+        {
+            command.servoCommands.push_back(parsedCommand);
+        } else {
+            command.servoCommands.clear();
+            isValid = false;
+            return command;
+        }
+    }
+
+    isValid = true;
+    return command;
 }
