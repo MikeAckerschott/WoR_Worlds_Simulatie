@@ -1,0 +1,7 @@
+
+wor_simulation_testing/build/.built_by
+wor_simulation_testing/build/COLCON_IGNORE
+
+wor_simulation_testing/build/
+wor_simulation_testing/install/
+wor_simulation_testing/log/
