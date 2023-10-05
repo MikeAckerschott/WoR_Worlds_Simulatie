@@ -1,7 +1,7 @@
+ros2_ws/wor_simulation_testing/build/
+ros2_ws/wor_simulation_testing/install/
+ros2_ws/wor_simulation_testing/log/
 
-wor_simulation_testing/build/.built_by
-wor_simulation_testing/build/COLCON_IGNORE
-
-wor_simulation_testing/build/
-wor_simulation_testing/install/
-wor_simulation_testing/log/
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
