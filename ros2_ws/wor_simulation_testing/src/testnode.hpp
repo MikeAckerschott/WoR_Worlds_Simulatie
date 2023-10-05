@@ -7,6 +7,7 @@
 
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "geometry_msgs/msg/point.hpp"
+#include "msg_srv/msg/robot_command.hpp"
 
 
 class TestNode : public rclcpp::Node
@@ -16,10 +17,12 @@ public:
 
     virtual ~TestNode() = default;
 
-    sensor_msgs::msg::JointState joint_state_message_;
-    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
+    sensor_msgs::msg::JointState jointStateMessage_;
+    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr jointStatePub_;
+    rclcpp::Subscription<msg_srv::msg::RobotCommand>::SharedPtr robotCommandSub_;
 
-    void publish_joint_state();
+    void publishJointState();
+    void handleSubRobotCommand(const msg_srv::msg::RobotCommand::SharedPtr msg);
 
 private:
 };

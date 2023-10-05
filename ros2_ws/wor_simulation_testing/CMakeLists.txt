@@ -11,9 +11,10 @@ find_package(visualization_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
+find_package(msg_srv REQUIRED)
 
-add_executable(testing_node src/main.cpp src/testnode.cpp)
-ament_target_dependencies(testing_node rclcpp tf2_ros geometry_msgs sensor_msgs)
+add_executable(testing_node src/main.cpp src/testnode.cpp src/commandParser.cpp)
+ament_target_dependencies(testing_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_srv)
 
 install(
   DIRECTORY launch rviz urdf

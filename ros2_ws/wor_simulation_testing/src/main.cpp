@@ -6,23 +6,75 @@
 #include "geometry_msgs/msg/point.hpp"
 
 #include "testnode.hpp"
+#include "commandParser.hpp"
+
+// include cin
+#include <iostream>
 
 int main(int argc, char **argv)
 {
     rclcpp::init(argc, argv);
 
-    TestNode test_node;
-    std::cout << "test_node created" << std::endl;
+    auto parser = CommandParser();
 
-    //publish every 10 ms
-    rclcpp::WallRate loop_rate(100);
+    // wait for string in cin
+    std::string messageString;
+    std::getline(std::cin, messageString);
 
-    while (rclcpp::ok())
+    // split string into commands
+    std::vector<std::string> commands = parser.splitCommands(messageString);
+
+    std::cout << "reading commands: " << std::endl;
+
+    for (std::string command : commands)
     {
-        test_node.publish_joint_state();
-        rclcpp::spin_some(test_node.get_node_base_interface());
-        loop_rate.sleep();
-        std::cout<<"test_node published"<<std::endl;
+        std::cout << "Command: '";
+        bool isValid = false;
+
+        int channel = parser.getChannel(command, isValid);
+
+        if (isValid)
+        {
+            std::cout << "Channel: " << channel;
+        }
+        else
+        {
+            std::cout << "Channel: invalid";
+        }
+
+        int pulseWidth = parser.getPulseWidth(command, isValid);
+
+        if (isValid)
+        {
+            std::cout << " Pulse Width: " << pulseWidth;
+        }
+        else
+        {
+            std::cout << " Pulse Width: invalid";
+        }
+
+        int duration = parser.getDuration(command, isValid);
+
+        if (isValid)
+        {
+            std::cout << " Duration: " << duration;
+        }
+        else
+        {
+            std::cout << " Duration: invalid";
+        }
+
+        int speed = parser.getSpeed(command, isValid);
+
+        if (isValid)
+        {
+            std::cout << " Speed: " << speed;
+        }
+        else
+        {
+            std::cout << " Speed: invalid";
+        }
+        std::cout << "'" << std::endl;
     }
 
     rclcpp::shutdown();
