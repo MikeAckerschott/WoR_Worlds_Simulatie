@@ -112,10 +112,9 @@ CommandParser::ServoCommand CommandParser::parseServoCommand(std::string &messag
     {
         return command;
     }
-    command.speed = getSpeed(messageString, isValid);
+    command.speedPWM = getSpeed(messageString, isValid);
     if (!isValid && !usingDuration)
     {
-        isValid = false;
         return command;
     }
     command.usingSpeed = isValid;
@@ -124,6 +123,15 @@ CommandParser::ServoCommand CommandParser::parseServoCommand(std::string &messag
     return command;
 }
 
+/**
+ * parses command as al5d standards would allow
+ *
+ * REQ only 1 channel per command
+ * REQ only 1 pulse width per command
+ * REQ speed must be present per command if duration is not present
+ * OPT speed is present per command
+ * OPT duration is present
+ */
 CommandParser::CompleteCommand CommandParser::parseCompleteCommand(std::string &messageString, bool &isValid)
 {
     CommandParser::CompleteCommand command;
@@ -144,6 +152,12 @@ CommandParser::CompleteCommand CommandParser::parseCompleteCommand(std::string &
 
     std::vector<std::string> servoCommands = splitCommands(messageString);
 
+    std::cout << "split commands: " << std::endl;
+    for (auto command : servoCommands)
+    {
+        std::cout << command << std::endl;
+    }
+
     for (std::string servoCommand : servoCommands)
     {
         bool isValid = true;
@@ -151,7 +165,10 @@ CommandParser::CompleteCommand CommandParser::parseCompleteCommand(std::string &
         if (isValid)
         {
             command.servoCommands.push_back(parsedCommand);
-        } else {
+        }
+        else
+        {
+            std::cout << "Invalid command: " << servoCommand << std::endl;
             command.servoCommands.clear();
             isValid = false;
             return command;
@@ -160,4 +177,75 @@ CommandParser::CompleteCommand CommandParser::parseCompleteCommand(std::string &
 
     isValid = true;
     return command;
+}
+
+int CommandParser::calculateRealDuration(CompleteCommand &command, sensor_msgs::msg::JointState robotPositionMessage_)
+{
+    int realDuration = 0;
+    if (command.usingDuration)
+    {
+        realDuration = command.duration;
+    }
+
+    // get the current position of all servos from topic /joint_states
+    // calculate the time it takes to move from current position to desired position
+    // if that time is greater than the current realDuration, set realDuration to that time
+
+    std::cout << command.servoCommands.size() << " commands" << std::endl;
+
+    for (size_t i = 0; i < command.servoCommands.size(); ++i)
+    {
+        std::cout << "COMMAND: " << std::endl;
+        int channel = command.servoCommands.at(i).channel;
+        std::cout<<"channel: "<<channel<<std::endl;
+        int pulseWidth = command.servoCommands.at(i).pulseWidth;
+        std::cout<<"pulseWidth: "<<pulseWidth<<std::endl;
+        double speed = command.servoCommands.at(i).speedPWM;
+        std::cout<<"speed: "<<speed<<std::endl;
+
+        double currentPosition = robotPositionMessage_.position[channel];
+        std::cout<<"currentPosition: "<<currentPosition<<std::endl;
+        
+
+        std::cout << "current position: " << currentPosition << std::endl;
+        std::cout << "pulse width: " << pulseWidth << std::endl;
+
+        double desiredPosAsDegrees = ServoUtils::pwmToDegrees(pulseWidth);
+        double currentPosAsDegrees = Utils::MathUtils::toDegrees(currentPosition);
+
+        std::cout << "desiredPosAsDegrees: " << desiredPosAsDegrees << std::endl;
+        std::cout << "currentPosAsDegrees: " << currentPosAsDegrees << std::endl;
+
+        double distance = abs(desiredPosAsDegrees - currentPosAsDegrees);
+
+        double degreesPerSecond;
+        if (command.servoCommands.at(i).usingSpeed)
+        {
+            degreesPerSecond = ServoUtils::pwmPerSecondToDegreesPerSecond(speed);
+        }
+        else
+        {
+            double durationAsSeconds = command.duration / 1000;
+            degreesPerSecond = distance / durationAsSeconds;
+        }
+
+        std::cout << "distance: " << distance << std::endl;
+        std::cout << "degrees per second: " << degreesPerSecond << std::endl;
+
+        command.servoCommands.at(i).speedAnglePerSecond = degreesPerSecond;
+
+        double timeToMove = (distance / degreesPerSecond) * 1000; // in milliseconds
+
+        if (timeToMove > realDuration)
+        {
+            realDuration = timeToMove;
+        }
+
+        std::cout << std::endl
+                  << std::endl;
+    }
+    // set the data in the command and return it for easier access
+    command.duration = realDuration;
+    std::cout << "realDuration: " << realDuration << std::endl;
+    return realDuration;
 }

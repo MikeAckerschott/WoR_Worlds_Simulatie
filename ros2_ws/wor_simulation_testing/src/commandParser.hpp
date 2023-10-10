@@ -1,6 +1,14 @@
+#ifndef COMMANDPARSER_HPP
+#define COMMANDPARSER_HPP
+
 #include <string>
 #include <vector>
 #include <iostream>
+#include "sensor_msgs/msg/joint_state.hpp"
+#include "rclcpp/rclcpp.hpp"
+
+#include "servoUtils.hpp"
+#include "mathUtils.hpp"
 
 class CommandParser
 {
@@ -12,8 +20,10 @@ public:
     {
         int channel;
         int pulseWidth;
-        int speed;
+        int speedPWM;
         bool usingSpeed;
+
+        double speedAnglePerSecond;
     };
 
     struct CompleteCommand
@@ -21,9 +31,11 @@ public:
         std::vector<ServoCommand> servoCommands;
         int duration;
         bool usingDuration;
+        unsigned long long startTime;
     };
 
     CommandParser::CompleteCommand parseCompleteCommand(std::string &messageString, bool &isValid);
+    int calculateRealDuration(CompleteCommand &command, sensor_msgs::msg::JointState robotPositionMessage_);
 
 private:
     int parseIntAfterChar(char delimiter, bool &isValid, std::string &messageString);
@@ -35,4 +47,8 @@ private:
     std::vector<std::string> splitCommands(std::string &messageString);
 
     CommandParser::ServoCommand parseServoCommand(std::string &messageString, bool &isValid, bool &usingDuration);
+
+
 };
+
+#endif /* COMMANDPARSER_HPP */

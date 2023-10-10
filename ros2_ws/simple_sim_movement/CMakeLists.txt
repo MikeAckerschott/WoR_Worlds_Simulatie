@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(wor_simulation_testing)
+project(simple_sim_movement)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
@@ -11,13 +11,9 @@ find_package(visualization_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
-find_package(msg_srv REQUIRED)
 
-add_executable(testing_node src/main.cpp src/testnode.cpp src/commandParser.cpp src/mathUtils.cpp src/servoUtils.cpp)
-ament_target_dependencies(testing_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_srv)
-
-add_executable(cli_node src/mainCommunicatorNode.cpp src/communicatorNode.cpp)
-ament_target_dependencies(cli_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_srv)
+add_executable(testing_node src/main.cpp src/testnode.cpp src/mathUtils.cpp)
+ament_target_dependencies(testing_node rclcpp tf2_ros geometry_msgs sensor_msgs)
 
 install(
   DIRECTORY launch rviz urdf
@@ -25,7 +21,7 @@ install(
 )
 
 install(
-  TARGETS testing_node cli_node
+  TARGETS testing_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

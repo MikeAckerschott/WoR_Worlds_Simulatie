@@ -20,6 +20,26 @@ TestNode::TestNode() : Node("test_node")
         0, // gripper 01
         0, // gripper 02
     };
+
+    lastRobotPosition_.name = {
+        "base_link2turret",
+        "turret2upperarm",
+        "upperarm2forearm",
+        "forearm2wrist",
+        "wrist2hand",
+        "gripper_left2hand",
+        "gripper_right2hand"};
+    lastRobotPosition_.position = {
+        0, // base
+        0, // shoulder
+        0, // elbow
+        0, // wrist
+        0, // hand
+        0, // gripper 01
+        0, // gripper 02
+    };
+    robotCommandSub_ = this->create_subscription<msg_srv::msg::RobotCommand>("robot_command", 10, std::bind(&TestNode::handleSubRobotCommand, this, std::placeholders::_1));
+    timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&TestNode::timerCallback, this));
 }
 
 void TestNode::publishJointState()
@@ -27,84 +47,66 @@ void TestNode::publishJointState()
     jointStateMessage_.header.stamp = now();     // set time
                                                  // fill msg
     jointStatePub_->publish(jointStateMessage_); // send
+
+    lastRobotPosition_ = jointStateMessage_;
 }
 
 void TestNode::handleSubRobotCommand(const msg_srv::msg::RobotCommand::SharedPtr msg)
 {
     std::string messageString = msg->command;
 
-    /**
-     * PARSE COMMAND. SEE Lynxmotion SSC-32U USB Servo Controller Board User Manual
-     *
-     * "#<ch>P<pw>​S​<spd>​T<time><cr>"
-     * <ch>   : pin / channel to which the servo is connected (0 to 31) in decimal
-     * <pw>   : desired pulse width (normally 500 to 2500) in microseconds
-     * <spd>​  : servo movement speed in microseconds per second*
-     * <time>​ : time in microseconds to travel from the current position to the desired position. This affects all servos (65535 max) *
-     */
+    bool isValid = true;
+    auto command = commandParser_.parseCompleteCommand(messageString, isValid);
 
-    // get first int after #
-    int iterator = 0;
-
-    // check if selected channel is actually a number
-    if (messageString[0] != '#')
+    if (!isValid)
     {
-        std::cout << "ERROR: Command does not start with #. Command: " << messageString << std::endl;
+        std::cout << "Invalid command" << std::endl;
         return;
     }
 
-    std::string chString = "";
+    commandParser_.calculateRealDuration(command, lastRobotPosition_);
 
-    while (messageString[iterator] != '\0')
+    rclcpp::Clock::SharedPtr clock = get_clock();
+    rclcpp::Time current_time = clock->now();
+
+    // Convert the time to milliseconds
+    lastActionTime_ = current_time.nanoseconds() / 1000000;
+    command.startTime = lastActionTime_;
+    this->currentCommand_ = command;
+
+    std::cout << "finsihed parsing command" << std::endl;
+}
+
+void TestNode::timerCallback()
+{
+    rclcpp ::Clock::SharedPtr clock = get_clock();
+    rclcpp::Time current_time = clock->now();
+    unsigned long long currentTime = current_time.nanoseconds() / 1000000;
+
+    if (currentTime > currentCommand_.duration + currentCommand_.startTime)
     {
-        if (messageString[iterator] == ' ')
-        {
-            iterator++;
-            continue;
-        }
-        if (messageString[iterator] < '0' || messageString[iterator] > '9')
-        {
-            break;
-        }
-        chString += messageString[iterator];
-        iterator++;
-    }
-
-    if(messageString[iterator] == '\0' || chString.size() == 0){
-        std::cout << "ERROR: Command does not contain a channel. Command: " << messageString << std::endl;
         return;
     }
 
-    // get integer value from char found at iterator
-    int channel = messageString[iterator] - '0';
+    std::cout << "moving robotic arm" << std::endl;
 
-    //Find P
-    int pIndex = messageString.find('P');
-    iterator = pIndex + 1;
-    std::string pwString = "";
+    int timePassed = currentTime - lastActionTime_;
 
-    // loop through input string untill a non-numeric value (ignoring spaces) is found or end of string is reached
-    while (messageString[iterator] != '\0')
+    std::cout << "time passed: " << timePassed << std::endl;
+    for (int i = 0; i < currentCommand_.servoCommands.size(); ++i)
     {
-        if (messageString[iterator] == ' ')
-        {
-            iterator++;
-            continue;
-        }
-        if (messageString[iterator] < '0' || messageString[iterator] > '9')
-        {
-            break;
-        }
-        pwString += messageString[iterator];
-        iterator++;
+        auto servoCommand = currentCommand_.servoCommands[i];
+
+        std::cout << "servo channel: " << servoCommand.channel << std::endl;
+        std::cout << "servo speed: " << servoCommand.speedAnglePerSecond << std::endl;
+        std::cout << "servo position: " << jointStateMessage_.position[servoCommand.channel] << std::endl;
+
+        jointStateMessage_.position[servoCommand.channel] = Utils::MathUtils::toRadians((servoCommand.speedAnglePerSecond * timePassed) / 1000) + jointStateMessage_.position[servoCommand.channel];
+        std::cout << "new servo position: " << jointStateMessage_.position[servoCommand.channel] << std::endl;
     }
 
-    if(messageString[iterator] == '\0'){
-        std::cout << "ERROR: Command does not contain a pulse width. Command: " << messageString << std::endl;
-        return;
-    }
-
-    // get integer value from char found at iterator
-    int pulseWidth = std::stoi(pwString);
-
+    current_time = clock->now();
+    lastActionTime_ = current_time.nanoseconds() / 1000000;
+    publishJointState();
+    std::cout << "published!" << std::endl;
 }
