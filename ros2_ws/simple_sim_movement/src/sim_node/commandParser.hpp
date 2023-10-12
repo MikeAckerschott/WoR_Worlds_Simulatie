@@ -7,8 +7,8 @@
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "rclcpp/rclcpp.hpp"
 
-#include "servoUtils.hpp"
-#include "mathUtils.hpp"
+#include "../utils/servoUtils.hpp"
+#include "../utils/mathUtils.hpp"
 
 class CommandParser
 {

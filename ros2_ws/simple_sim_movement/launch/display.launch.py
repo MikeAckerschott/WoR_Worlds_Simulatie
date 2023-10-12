@@ -10,10 +10,10 @@ from ament_index_python.packages import get_package_share_directory
 
 def generate_launch_description():
 
-    wor_simulation_testing_path = FindPackageShare('wor_simulation_testing')
+    simple_sim_movement_path = FindPackageShare('simple_sim_movement')
     urdf_file_name = 'urdf/lynxmotion_arm.urdf'
     default_rviz_config_path = PathJoinSubstitution(
-        [wor_simulation_testing_path, 'rviz', 'urdf.rviz'])
+        [simple_sim_movement_path, 'rviz', 'urdf.rviz'])
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
     urdf = os.path.join(

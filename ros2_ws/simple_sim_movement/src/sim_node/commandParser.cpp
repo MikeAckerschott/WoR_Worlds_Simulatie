@@ -176,6 +176,9 @@ CommandParser::CompleteCommand CommandParser::parseCompleteCommand(std::string &
     }
 
     isValid = true;
+
+    std::cout << "parsed command. valid!: " << std::endl;
+
     return command;
 }
 
@@ -197,15 +200,14 @@ int CommandParser::calculateRealDuration(CompleteCommand &command, sensor_msgs::
     {
         std::cout << "COMMAND: " << std::endl;
         int channel = command.servoCommands.at(i).channel;
-        std::cout<<"channel: "<<channel<<std::endl;
+        std::cout << "channel: " << channel << std::endl;
         int pulseWidth = command.servoCommands.at(i).pulseWidth;
-        std::cout<<"pulseWidth: "<<pulseWidth<<std::endl;
+        std::cout << "pulseWidth: " << pulseWidth << std::endl;
         double speed = command.servoCommands.at(i).speedPWM;
-        std::cout<<"speed: "<<speed<<std::endl;
+        std::cout << "speed: " << speed << std::endl;
 
         double currentPosition = robotPositionMessage_.position[channel];
-        std::cout<<"currentPosition: "<<currentPosition<<std::endl;
-        
+        std::cout << "currentPosition: " << currentPosition << std::endl;
 
         std::cout << "current position: " << currentPosition << std::endl;
         std::cout << "pulse width: " << pulseWidth << std::endl;
@@ -216,12 +218,15 @@ int CommandParser::calculateRealDuration(CompleteCommand &command, sensor_msgs::
         std::cout << "desiredPosAsDegrees: " << desiredPosAsDegrees << std::endl;
         std::cout << "currentPosAsDegrees: " << currentPosAsDegrees << std::endl;
 
-        double distance = abs(desiredPosAsDegrees - currentPosAsDegrees);
+        double distance = desiredPosAsDegrees - currentPosAsDegrees;
 
         double degreesPerSecond;
         if (command.servoCommands.at(i).usingSpeed)
         {
             degreesPerSecond = ServoUtils::pwmPerSecondToDegreesPerSecond(speed);
+            if(distance < 0){
+                degreesPerSecond *= -1;
+            }
         }
         else
         {
