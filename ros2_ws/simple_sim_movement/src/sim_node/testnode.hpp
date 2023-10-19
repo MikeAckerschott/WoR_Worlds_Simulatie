@@ -33,6 +33,8 @@ private:
 
     void handleCupTransform();
 
+    void initTF2();
+
 private:
     std::string sim_link_, bot_link_, cup_link_;
 
@@ -47,6 +49,8 @@ private:
 
     std::queue<CommandParser::CompleteCommand> commandQueue;
 
+
+    geometry_msgs::msg::TransformStamped transform_;
     tf2_ros::Buffer buffer_;
     tf2_ros::TransformListener listener_;
     tf2_ros::TransformBroadcaster broadcaster_;

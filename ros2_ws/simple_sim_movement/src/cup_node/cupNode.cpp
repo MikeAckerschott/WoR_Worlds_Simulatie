@@ -24,12 +24,14 @@ void CupNode::timerCallback()
 {
     std::cout << "publishing marker" << std::endl;
     publishMarker();
+    //TODO REMOVE
+    initTF2();
     broadcaster_.sendTransform(transform_);
 }
 
 void CupNode::initMarker()
 {
- // Getting the model file path:
+    // Getting the model file path:
     auto package_share_directory = ament_index_cpp::get_package_share_directory("simple_sim_movement");
     std::string base_frame = "base_link";
     auto file_name = "file://" + package_share_directory + "/../../../../simple_sim_movement" + "/stl/cup.stl";
@@ -64,9 +66,6 @@ void CupNode::initMarker()
     marker_msg.pose = pose;
     marker_msg.id = 0;
     marker_msg.mesh_resource = file_name;
-    marker_msg.scale.x = 2;
-    marker_msg.scale.y = 2;
-    marker_msg.scale.z = 2;
     marker_msg.color = colour;
 
     marker_msg.scale.x = 0.003;
@@ -80,9 +79,8 @@ void CupNode::initTF2()
     transform_.child_frame_id = cup_link_;
     transform_.header.stamp = this->now();
 
-    // TODO add functionality to get object position from rviz
-    transform_.transform.translation.x = 0.0;
-    transform_.transform.translation.y = 0.0;
+    transform_.transform.translation.x = 0.17;
+    transform_.transform.translation.y = 0.19;
     transform_.transform.translation.z = 0.0;
 
     broadcaster_.sendTransform(transform_);

@@ -2,6 +2,7 @@
 
 TestNode::TestNode() : Node("test_node"), buffer_(this->get_clock()), listener_(buffer_), broadcaster_(this), sim_link_("sim_link"), bot_link_("base_link"), cup_link_("cup_link")
 {
+
     joint_state_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
     joint_state_message_.name = {
         "base_link2turret",
@@ -21,6 +22,7 @@ TestNode::TestNode() : Node("test_node"), buffer_(this->get_clock()), listener_(
         0, // gripper 02
     };
     joint_state_pub_->publish(joint_state_message_);
+
     timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&TestNode::timerCallback, this));
     cupTransformTimer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&TestNode::handleCupTransform, this));
 
@@ -30,6 +32,7 @@ TestNode::TestNode() : Node("test_node"), buffer_(this->get_clock()), listener_(
 
 void TestNode::publish_joint_state()
 {
+    initTF2();
     joint_state_message_.header.stamp = now();       // set time
                                                      // fill msg
     joint_state_pub_->publish(joint_state_message_); // send
@@ -138,4 +141,19 @@ void TestNode::handleCupTransform()
     std::cout << "x: " << t.transform.translation.x << std::endl;
     std::cout << "Y: " << t.transform.translation.y << std::endl;
     std::cout << "Z: " << t.transform.translation.z << std::endl;
+}
+
+void TestNode::initTF2()
+{
+    geometry_msgs::msg::TransformStamped t;
+    t.header.stamp = this->now();
+    t.header.frame_id = sim_link_;
+    t.child_frame_id = bot_link_;
+    t.transform.translation.x = 0.0;
+    t.transform.translation.y = 0.0;
+    t.transform.translation.z = 0.0;
+
+    broadcaster_.sendTransform(t);
+
+    std::cout << "init tf2" << std::endl;
 }
