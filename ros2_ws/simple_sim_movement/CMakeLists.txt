@@ -16,6 +16,7 @@ find_package(msg_srv REQUIRED)
 set(SIM_NODE_DIR "src/sim_node")
 set(UTILS_DIR "src/utils")
 set(CLI_NODE_DIR "src/cli_node")
+set(CUP_NODE_DIR "src/cup_node")
 
 set(SIM_NODE_SRC
   "${SIM_NODE_DIR}/main.cpp"
@@ -33,11 +34,19 @@ set(CLI_NODE_SRC
   "${CLI_NODE_DIR}/communicatorNode.cpp"
 )
 
+set(CUP_NODE_SRC
+  "${CUP_NODE_DIR}/cupNode.cpp"
+  "${CUP_NODE_DIR}/main.cpp"
+)
+
 add_executable(testing_node ${SIM_NODE_SRC} ${UTILS_SRC})
 ament_target_dependencies(testing_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_srv)
 
 add_executable(cli_node ${CLI_NODE_SRC})
 ament_target_dependencies(cli_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_srv)
+
+add_executable(cup_node ${CUP_NODE_SRC})
+ament_target_dependencies(cup_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_srv visualization_msgs)
 
 install(
   DIRECTORY launch rviz urdf
@@ -45,7 +54,7 @@ install(
 )
 
 install(
-  TARGETS testing_node cli_node
+  TARGETS testing_node cli_node cup_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -16,7 +16,6 @@
 #include <rclcpp/rclcpp.hpp>
 #include <queue>
 
-
 class TestNode : public rclcpp::Node
 {
 public:
@@ -24,21 +23,33 @@ public:
 
     virtual ~TestNode() = default;
 
-    sensor_msgs::msg::JointState joint_state_message_;
-    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
-    rclcpp::Subscription<msg_srv::msg::RobotCommand>::SharedPtr robot_command_sub_;
+    void emptyQueue();
+    void skipCurrentCommand();
 
+private:
+    void handle_robot_command(const msg_srv::msg::RobotCommand::SharedPtr msg);
     void publish_joint_state();
     void timerCallback();
+
+    void handleCupTransform();
+
+private:
+    std::string sim_link_, bot_link_, cup_link_;
+
+    sensor_msgs::msg::JointState joint_state_message_;
+
+    rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
+    rclcpp::Subscription<msg_srv::msg::RobotCommand>::SharedPtr robot_command_sub_;
+    rclcpp::TimerBase::SharedPtr timer_;
+    rclcpp::TimerBase::SharedPtr cupTransformTimer_;
 
     CommandParser parser;
 
     std::queue<CommandParser::CompleteCommand> commandQueue;
 
-private:
-    rclcpp::TimerBase::SharedPtr timer_;
-
-    void handle_robot_command(const msg_srv::msg::RobotCommand::SharedPtr msg);
+    tf2_ros::Buffer buffer_;
+    tf2_ros::TransformListener listener_;
+    tf2_ros::TransformBroadcaster broadcaster_;
 };
 
 #endif /* TESTNODE_HPP_ */
