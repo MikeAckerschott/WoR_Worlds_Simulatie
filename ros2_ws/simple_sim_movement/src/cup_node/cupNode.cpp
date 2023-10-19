@@ -4,16 +4,20 @@ CupNode::CupNode() : Node("cup_node"), buffer_(this->get_clock()), listener_(buf
 {
     initTF2();
     initMarker();
-    marker_pub_ = this->create_publisher<visualization_msgs::msg::Marker>("visualization_marker", 10);
     timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&CupNode::timerCallback, this));
 
+    std::string topic = "/visualization_marker";
+    auto qos = rclcpp::QoS(1000);
 
+    marker_pub_ = create_publisher<visualization_msgs::msg::Marker>(topic, qos);
 }
 
 void CupNode::publishMarker()
 {
     marker_msg.header.stamp = this->now();
-    marker_pub_->publish(std::move(marker_msg));
+    RCLCPP_INFO(get_logger(), "Attempting to publish mesh");
+
+    marker_pub_->publish(marker_msg);
 }
 
 void CupNode::timerCallback()
@@ -25,53 +29,58 @@ void CupNode::timerCallback()
 
 void CupNode::initMarker()
 {
-    marker_msg = visualization_msgs::msg::Marker();
+ // Getting the model file path:
+    auto package_share_directory = ament_index_cpp::get_package_share_directory("simple_sim_movement");
+    std::string base_frame = "base_link";
+    auto file_name = "file://" + package_share_directory + "/../../../../simple_sim_movement" + "/stl/cup.stl";
 
-    marker_msg.header.frame_id = cup_link_;
-    marker_msg.header.stamp = this->now();
+    RCLCPP_INFO(get_logger(), "Waiting for Rviz to load...");
 
-    marker_msg.ns = "wor_cup";
-    marker_msg.id = 0;
+    while (get_node_graph_interface()->count_subscribers("/visualization_marker") == 0)
+    {
+        rclcpp::sleep_for(std::chrono::milliseconds(200));
+    }
 
-    marker_msg.type = visualization_msgs::msg::Marker::MESH_RESOURCE;
+    // Creating the marker and initialising its fields
+    geometry_msgs::msg::Pose pose;
+    pose.position.x = 0.2;
+    pose.position.y = 0.1;
+    pose.position.z = 0;
+    pose.orientation.x = 0;
+    pose.orientation.y = 0;
+    pose.orientation.z = 0;
+    pose.orientation.w = 0;
+
+    std_msgs::msg::ColorRGBA colour;
+    colour.a = 1;
+    colour.r = 1;
+    colour.g = 0;
+    colour.b = 0;
+
+    marker_msg.header.frame_id = "base_link";
+    marker_msg.header.stamp = now();
     marker_msg.action = visualization_msgs::msg::Marker::ADD;
+    marker_msg.type = visualization_msgs::msg::Marker::MESH_RESOURCE;
+    marker_msg.pose = pose;
+    marker_msg.id = 0;
+    marker_msg.mesh_resource = file_name;
+    marker_msg.scale.x = 2;
+    marker_msg.scale.y = 2;
+    marker_msg.scale.z = 2;
+    marker_msg.color = colour;
 
-    marker_msg.pose.position.x = 1.0;
-    marker_msg.pose.position.y = 2.0;
-    marker_msg.pose.position.z = 0.0;
-
-    std::string package_share_directory = ament_index_cpp::get_package_share_directory("simple_sim_movement");
-    std::string file_name = package_share_directory.append("/stl/cup.stl");
-
-    marker_msg.mesh_resource = "file://" + file_name;
-
-    // marker_msg.scale.x = 0.001;
-    // marker_msg.scale.y = 0.001;
-    // marker_msg.scale.z = 0.001;
-
-    marker_msg.pose.orientation.x = 0.0;
-    marker_msg.pose.orientation.y = 0.0;
-    marker_msg.pose.orientation.z = 0.0;
-    marker_msg.pose.orientation.w = 1.0;
-
-    marker_msg.scale.x = 1.0;
-    marker_msg.scale.y = 1.0;
-    marker_msg.scale.z = 1.0;
-
-    marker_msg.color.r = 0.0f;
-    marker_msg.color.g = 1.0f;
-    marker_msg.color.b = 0.0f;
-    marker_msg.color.a = 1.0;
-
-    marker_msg.lifetime = rclcpp::Duration(std::chrono::milliseconds(10));
+    marker_msg.scale.x = 0.003;
+    marker_msg.scale.y = 0.003;
+    marker_msg.scale.z = 0.003;
 }
 
-void CupNode::initTF2() {
+void CupNode::initTF2()
+{
     transform_.header.frame_id = sim_link_;
     transform_.child_frame_id = cup_link_;
     transform_.header.stamp = this->now();
 
-    //TODO add functionality to get object position from rviz
+    // TODO add functionality to get object position from rviz
     transform_.transform.translation.x = 0.0;
     transform_.transform.translation.y = 0.0;
     transform_.transform.translation.z = 0.0;

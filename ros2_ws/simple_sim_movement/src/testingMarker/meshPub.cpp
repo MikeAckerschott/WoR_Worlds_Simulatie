@@ -15,18 +15,16 @@ int main(int argc, char **argv)
 
     rclcpp::Node node("shape_pubilsher");
 
-    string base_frame = "base_link";
-
     string topic = "/visualization_marker";
-
-    // Getting the model file path:
-    auto package_share_directory = ament_index_cpp::get_package_share_directory("simple_sim_movement");
-
-    auto file_name = "file://" + package_share_directory + "/../../../../simple_sim_movement" + "/stl/cup.stl";
 
     auto qos = rclcpp::QoS(1000);
 
     auto publisher = node.create_publisher<visualization_msgs::msg::Marker>(topic, qos);
+
+    // Getting the model file path:
+    auto package_share_directory = ament_index_cpp::get_package_share_directory("simple_sim_movement");
+    string base_frame = "base_link";
+    auto file_name = "file://" + package_share_directory + "/../../../../simple_sim_movement" + "/stl/cup.stl";
 
     RCLCPP_INFO(node.get_logger(), "Waiting for Rviz to load...");
 
