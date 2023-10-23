@@ -18,11 +18,6 @@ void CupNode::publishMarker()
     markerMsg.header.stamp = this->now();
     RCLCPP_INFO(get_logger(), "Attempting to publish mesh");
 
-    // add offset to marker to negate bad model (probably?)
-    markerMsg.pose.position.z = -0.01;
-    markerMsg.pose.position.x = -0.02;
-    markerMsg.pose.position.y = 0.06;
-
     markerPub->publish(markerMsg);
 }
 
@@ -32,6 +27,10 @@ void CupNode::timerCallback()
 
     // TODO remove after testing
     cupToHand();
+
+    std::cout << "x: " << markerMsg.pose.position.x << std::endl;
+    std::cout << "y: " << markerMsg.pose.position.y << std::endl;
+    std::cout << "z: " << markerMsg.pose.position.z << std::endl;
 
     publishMarker();
     broadcastTf2();
@@ -52,6 +51,10 @@ void CupNode::initMarker()
     }
 
     // Creating the marker and initialising its fields
+    // add offset to marker to negate bad model (probably?)
+    pose.position.z = -0.01;
+    pose.position.x = -0.02;
+    pose.position.y = 0.06;
 
     pose.orientation.x = 0;
     pose.orientation.y = 0;
@@ -138,23 +141,34 @@ void CupNode::cupToHand()
 {
     std::string targetFrameID = "hand";
 
+    geometry_msgs::msg::TransformStamped newTransform;
+
     try
     {
-        geometry_msgs::msg::TransformStamped newTransform = buffer.lookupTransform(targetFrameID, cupLink, tf2::TimePointZero);
-        transform.transform = newTransform.transform;
-        transform.header.frame_id = targetFrameID;
-
-        transform.transform.translation.x = 0;
-        transform.transform.translation.y = 0;
-        transform.transform.translation.z = 0.045;
-
-        markerMsg.pose.orientation.x = transform.transform.rotation.x;
-        markerMsg.pose.orientation.y = 0;
-        markerMsg.pose.orientation.z = transform.transform.rotation.z;
+        newTransform = buffer.lookupTransform(targetFrameID, cupLink, tf2::TimePointZero);
     }
     catch (tf2::ExtrapolationException &ex)
     {
         RCLCPP_ERROR(this->get_logger(), "Extrapolation Exception: %s", ex.what());
         // Handle the exception as needed.
     }
+
+    transform.transform = newTransform.transform;
+    transform.header.frame_id = targetFrameID;
+
+    transform.transform.translation.x = 0;
+    transform.transform.translation.y = 0;
+    transform.transform.translation.z = 0.045;
+
+    //rotate 90 degrees around z axis, but format in quaternions
+
+    tf2::Quaternion q;
+    q.setRPY(Utils::MathUtils::toRadians(0), Utils::MathUtils::toRadians(270), Utils::MathUtils::toRadians(0));
+
+    transform.transform.rotation.x = q.x();
+    transform.transform.rotation.y = q.y();
+    transform.transform.rotation.z = q.z();
+    transform.transform.rotation.w = q.w();
+
+
 }

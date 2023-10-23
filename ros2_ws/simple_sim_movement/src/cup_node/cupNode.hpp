@@ -10,6 +10,7 @@
 #include "geometry_msgs/msg/transform_stamped.hpp"
 
 #include "../utils/mathUtils.hpp"
+#include <tf2/LinearMath/Quaternion.h>
 
 #include <chrono>
 #include <memory>
