@@ -6,9 +6,13 @@
 #include "tf2_ros/transform_listener.h"
 #include "tf2_ros/buffer.h"
 
+#include "msg_srv/srv/pickup_cup.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 
 #include <chrono>
+#include <memory>
+
+using namespace std::chrono_literals;
 
 class CupNode : public rclcpp::Node
 {
@@ -23,19 +27,32 @@ public:
 
 private:
     void initMarker();
-    void initTF2();
+    void initTf2();
+    void markerToTf2();
+
+    void handlePickupCup(const std::shared_ptr<msg_srv::srv::PickupCup::Request> request, const std::shared_ptr<msg_srv::srv::PickupCup::Response> response);
+    void broadcastTf2();
+
+    void cupToHand();
 
 private:
-    std::string sim_link_, bot_link_, cup_link_;
+    const float MARKER_TF2_X_OFFSET = 0.03;
+    const float MARKER_TF2_Y_OFFSET = 0.01;
 
-    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr marker_pub_;
-    visualization_msgs::msg::Marker marker_msg;
+    std::string simLink, botLink, cupLink;
 
-    rclcpp::TimerBase::SharedPtr timer_;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr markerPub;
+    rclcpp::Service<msg_srv::srv::PickupCup>::SharedPtr pickupCupService;
+    visualization_msgs::msg::Marker markerMsg;
+    geometry_msgs::msg::Pose pose;
 
-    geometry_msgs::msg::TransformStamped transform_;
+    rclcpp::TimerBase::SharedPtr timer;
 
-    tf2_ros::Buffer buffer_;
-    tf2_ros::TransformListener listener_;
-    tf2_ros::TransformBroadcaster broadcaster_;
+    geometry_msgs::msg::TransformStamped transform;
+
+    tf2_ros::Buffer buffer;
+    tf2_ros::TransformListener listener;
+    tf2_ros::TransformBroadcaster broadcaster;
+
+    bool isPickedup = true;
 };

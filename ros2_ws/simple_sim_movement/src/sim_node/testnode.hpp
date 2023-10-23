@@ -8,6 +8,8 @@
 #include "sensor_msgs/msg/joint_state.hpp"
 #include "geometry_msgs/msg/point.hpp"
 
+#include "msg_srv/srv/pickup_cup.hpp"
+
 #include "../utils/mathUtils.hpp"
 #include "../utils/servoUtils.hpp"
 #include "msg_srv/msg/robot_command.hpp"
@@ -44,6 +46,7 @@ private:
     rclcpp::Subscription<msg_srv::msg::RobotCommand>::SharedPtr robot_command_sub_;
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::TimerBase::SharedPtr cupTransformTimer_;
+    rclcpp::Client<msg_srv::srv::PickupCup>::SharedPtr pickupCupClient_;
 
     CommandParser parser;
 

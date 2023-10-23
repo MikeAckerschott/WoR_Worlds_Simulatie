@@ -1,32 +1,34 @@
 #include "cupNode.hpp"
 
-CupNode::CupNode() : Node("cup_node"), buffer_(this->get_clock()), listener_(buffer_), broadcaster_(this), sim_link_("sim_link"), bot_link_("base_link"), cup_link_("cup_link")
+CupNode::CupNode() : Node("cup_node"), buffer(this->get_clock()), listener(buffer), broadcaster(this), simLink("sim_link"), botLink("base_link"), cupLink("cup_link")
 {
-    initTF2();
+    initTf2();
     initMarker();
-    timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&CupNode::timerCallback, this));
+    timer = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&CupNode::timerCallback, this));
 
     std::string topic = "/visualization_marker";
     auto qos = rclcpp::QoS(1000);
 
-    marker_pub_ = create_publisher<visualization_msgs::msg::Marker>(topic, qos);
+    markerPub = create_publisher<visualization_msgs::msg::Marker>(topic, qos);
+    pickupCupService = create_service<msg_srv::srv::PickupCup>("pickup_cup", std::bind(&CupNode::handlePickupCup, this, std::placeholders::_1, std::placeholders::_2));
 }
 
 void CupNode::publishMarker()
 {
-    marker_msg.header.stamp = this->now();
+    markerMsg.header.stamp = this->now();
     RCLCPP_INFO(get_logger(), "Attempting to publish mesh");
 
-    marker_pub_->publish(marker_msg);
+    markerPub->publish(markerMsg);
 }
 
 void CupNode::timerCallback()
 {
     std::cout << "publishing marker" << std::endl;
+
+    cupToHand();
+
     publishMarker();
-    //TODO REMOVE
-    initTF2();
-    broadcaster_.sendTransform(transform_);
+    broadcastTf2();
 }
 
 void CupNode::initMarker()
@@ -44,7 +46,7 @@ void CupNode::initMarker()
     }
 
     // Creating the marker and initialising its fields
-    geometry_msgs::msg::Pose pose;
+
     pose.position.x = 0.2;
     pose.position.y = 0.1;
     pose.position.z = 0;
@@ -59,29 +61,104 @@ void CupNode::initMarker()
     colour.g = 0;
     colour.b = 0;
 
-    marker_msg.header.frame_id = "base_link";
-    marker_msg.header.stamp = now();
-    marker_msg.action = visualization_msgs::msg::Marker::ADD;
-    marker_msg.type = visualization_msgs::msg::Marker::MESH_RESOURCE;
-    marker_msg.pose = pose;
-    marker_msg.id = 0;
-    marker_msg.mesh_resource = file_name;
-    marker_msg.color = colour;
+    markerMsg.header.frame_id = "base_link";
+    markerMsg.header.stamp = now();
+    markerMsg.action = visualization_msgs::msg::Marker::ADD;
+    markerMsg.type = visualization_msgs::msg::Marker::MESH_RESOURCE;
+    markerMsg.pose = pose;
+    markerMsg.id = 0;
+    markerMsg.mesh_resource = file_name;
+    markerMsg.color = colour;
 
-    marker_msg.scale.x = 0.003;
-    marker_msg.scale.y = 0.003;
-    marker_msg.scale.z = 0.003;
+    markerMsg.scale.x = 0.002;
+    markerMsg.scale.y = 0.002;
+    markerMsg.scale.z = 0.002;
 }
 
-void CupNode::initTF2()
+void CupNode::initTf2()
 {
-    transform_.header.frame_id = sim_link_;
-    transform_.child_frame_id = cup_link_;
-    transform_.header.stamp = this->now();
+    transform.header.frame_id = simLink;
+    transform.child_frame_id = cupLink;
+    transform.header.stamp = this->now();
 
-    transform_.transform.translation.x = 0.17;
-    transform_.transform.translation.y = 0.19;
-    transform_.transform.translation.z = 0.0;
+    transform.transform.translation.x = 0.17;
+    transform.transform.translation.y = 0.19;
+    transform.transform.translation.z = 0.0;
 
-    broadcaster_.sendTransform(transform_);
+    broadcaster.sendTransform(transform);
+}
+
+void CupNode::broadcastTf2()
+{
+    transform.header.stamp = this->now();
+
+    broadcaster.sendTransform(transform);
+}
+
+void CupNode::markerToTf2()
+{
+    transform.transform.translation.x = markerMsg.pose.position.x - 0.02;
+    transform.transform.translation.y = markerMsg.pose.position.y - 0.0505 + 0.11;
+    transform.transform.translation.z = markerMsg.pose.position.z;
+}
+
+void CupNode::handlePickupCup(const std::shared_ptr<msg_srv::srv::PickupCup::Request> request,
+                              const std::shared_ptr<msg_srv::srv::PickupCup::Response> response)
+{
+    std::cout << "pickup cup" << std::endl;
+
+    if (request->pickup)
+    {
+        std::string fromFrameRel = "hand";
+        std::string toFrameRel = cupLink;
+
+        geometry_msgs::msg::TransformStamped t;
+
+        try
+        {
+            t = buffer.lookupTransform(fromFrameRel, toFrameRel, tf2::TimePointZero);
+        }
+        catch (tf2::TransformException &ex)
+        {
+            RCLCPP_WARN(this->get_logger(), "%s", ex.what());
+            return;
+        }
+
+        // check if hand is close enough to cup
+
+        std::cout << "x: " << t.transform.translation.x << std::endl;
+        std::cout << "Y: " << t.transform.translation.y << std::endl;
+        std::cout << "Z: " << t.transform.translation.z << std::endl;
+
+        if (t.transform.translation.x < 0.1 && t.transform.translation.y < 0.1 && t.transform.translation.z < 0.1)
+        {
+            response->pickup_success = true;
+        }
+    }
+    else
+    {
+        // TODO add gravity
+        markerMsg.pose.position.z = 0;
+    }
+}
+
+void CupNode::cupToHand()
+{
+    std::string targetFrameID = "hand";
+
+    try
+    {
+        geometry_msgs::msg::TransformStamped newTransform = buffer.lookupTransform(targetFrameID, cupLink, tf2::TimePointZero);
+        transform.transform = newTransform.transform;
+        transform.header.frame_id = targetFrameID;
+
+        transform.transform.translation.x = 0;
+        transform.transform.translation.y = 0;
+        transform.transform.translation.z = 0.045;
+    }
+    catch (tf2::ExtrapolationException &ex)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Extrapolation Exception: %s", ex.what());
+        // Handle the exception as needed.
+    }
 }

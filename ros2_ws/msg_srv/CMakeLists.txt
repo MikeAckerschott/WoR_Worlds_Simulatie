@@ -24,6 +24,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/MoveToPosition.srv"
   "srv/Skip.srv"
   "srv/EmptyQueue.srv"
+  "srv/PickupCup.srv"
 )
 
 if(BUILD_TESTING)

@@ -1,0 +1,3 @@
+bool pickup #set to true if you want to pick it up, false if you want to drop it
+---
+bool pickup_success #true if the pickup was successful, false if it was not

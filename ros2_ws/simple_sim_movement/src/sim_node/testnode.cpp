@@ -26,8 +26,8 @@ TestNode::TestNode() : Node("test_node"), buffer_(this->get_clock()), listener_(
     timer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&TestNode::timerCallback, this));
     cupTransformTimer_ = this->create_wall_timer(std::chrono::milliseconds(10), std::bind(&TestNode::handleCupTransform, this));
 
-    robot_command_sub_ = this->create_subscription<msg_srv::msg::RobotCommand>(
-        "robot_command", 10, std::bind(&TestNode::handle_robot_command, this, std::placeholders::_1));
+    robot_command_sub_ = this->create_subscription<msg_srv::msg::RobotCommand>("robot_command", 10, std::bind(&TestNode::handle_robot_command, this, std::placeholders::_1));
+    pickupCupClient_ = this->create_client<msg_srv::srv::PickupCup>("pickup_cup");
 }
 
 void TestNode::publish_joint_state()
