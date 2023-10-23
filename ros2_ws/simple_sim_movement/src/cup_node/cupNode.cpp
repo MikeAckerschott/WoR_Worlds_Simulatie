@@ -18,6 +18,11 @@ void CupNode::publishMarker()
     markerMsg.header.stamp = this->now();
     RCLCPP_INFO(get_logger(), "Attempting to publish mesh");
 
+    // add offset to marker to negate bad model (probably?)
+    markerMsg.pose.position.z = -0.01;
+    markerMsg.pose.position.x = -0.02;
+    markerMsg.pose.position.y = 0.06;
+
     markerPub->publish(markerMsg);
 }
 
@@ -25,6 +30,7 @@ void CupNode::timerCallback()
 {
     std::cout << "publishing marker" << std::endl;
 
+    // TODO remove after testing
     cupToHand();
 
     publishMarker();
@@ -47,13 +53,10 @@ void CupNode::initMarker()
 
     // Creating the marker and initialising its fields
 
-    pose.position.x = 0.2;
-    pose.position.y = 0.1;
-    pose.position.z = 0;
     pose.orientation.x = 0;
     pose.orientation.y = 0;
     pose.orientation.z = 0;
-    pose.orientation.w = 0;
+    pose.orientation.w = 1;
 
     std_msgs::msg::ColorRGBA colour;
     colour.a = 1;
@@ -61,7 +64,7 @@ void CupNode::initMarker()
     colour.g = 0;
     colour.b = 0;
 
-    markerMsg.header.frame_id = "base_link";
+    markerMsg.header.frame_id = cupLink;
     markerMsg.header.stamp = now();
     markerMsg.action = visualization_msgs::msg::Marker::ADD;
     markerMsg.type = visualization_msgs::msg::Marker::MESH_RESOURCE;
@@ -81,8 +84,8 @@ void CupNode::initTf2()
     transform.child_frame_id = cupLink;
     transform.header.stamp = this->now();
 
-    transform.transform.translation.x = 0.17;
-    transform.transform.translation.y = 0.19;
+    transform.transform.translation.x = 0.2;
+    transform.transform.translation.y = 0.1;
     transform.transform.translation.z = 0.0;
 
     broadcaster.sendTransform(transform);
@@ -93,13 +96,6 @@ void CupNode::broadcastTf2()
     transform.header.stamp = this->now();
 
     broadcaster.sendTransform(transform);
-}
-
-void CupNode::markerToTf2()
-{
-    transform.transform.translation.x = markerMsg.pose.position.x - 0.02;
-    transform.transform.translation.y = markerMsg.pose.position.y - 0.0505 + 0.11;
-    transform.transform.translation.z = markerMsg.pose.position.z;
 }
 
 void CupNode::handlePickupCup(const std::shared_ptr<msg_srv::srv::PickupCup::Request> request,
@@ -132,13 +128,9 @@ void CupNode::handlePickupCup(const std::shared_ptr<msg_srv::srv::PickupCup::Req
 
         if (t.transform.translation.x < 0.1 && t.transform.translation.y < 0.1 && t.transform.translation.z < 0.1)
         {
+            cupToHand();
             response->pickup_success = true;
         }
-    }
-    else
-    {
-        // TODO add gravity
-        markerMsg.pose.position.z = 0;
     }
 }
 
@@ -155,6 +147,10 @@ void CupNode::cupToHand()
         transform.transform.translation.x = 0;
         transform.transform.translation.y = 0;
         transform.transform.translation.z = 0.045;
+
+        markerMsg.pose.orientation.x = transform.transform.rotation.x;
+        markerMsg.pose.orientation.y = 0;
+        markerMsg.pose.orientation.z = transform.transform.rotation.z;
     }
     catch (tf2::ExtrapolationException &ex)
     {

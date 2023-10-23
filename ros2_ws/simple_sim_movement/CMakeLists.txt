@@ -45,7 +45,7 @@ ament_target_dependencies(testing_node rclcpp tf2_ros geometry_msgs sensor_msgs 
 add_executable(cli_node ${CLI_NODE_SRC})
 ament_target_dependencies(cli_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_srv)
 
-add_executable(cup_node ${CUP_NODE_SRC})
+add_executable(cup_node ${CUP_NODE_SRC} ${UTILS_SRC})
 ament_target_dependencies(cup_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_srv visualization_msgs)
 
 add_executable(marker_testing src/testingMarker/meshPub.cpp)
