@@ -1,6 +1,6 @@
 #include "cupNode.hpp"
 
-CupNode::CupNode() : Node("cup_node"), buffer(this->get_clock()), listener(buffer), broadcaster(this), simLink("sim_link"), botLink("base_link"), cupLink("cup_link")
+CupNode::CupNode() : Node("cup_node"), buffer(this->get_clock()), listener(buffer), broadcaster(this), simLink("sim_link"), botLink("base_link"), cupLink("cup_link"), isPickedup(false)
 {
     initTf2();
     initMarker();
@@ -25,13 +25,7 @@ void CupNode::timerCallback()
 {
     std::cout << "publishing marker" << std::endl;
 
-    // TODO remove after testing
-    cupToHand();
-
-    std::cout << "x: " << markerMsg.pose.position.x << std::endl;
-    std::cout << "y: " << markerMsg.pose.position.y << std::endl;
-    std::cout << "z: " << markerMsg.pose.position.z << std::endl;
-
+    applyGravity();
     publishMarker();
     broadcastTf2();
 }
@@ -125,15 +119,36 @@ void CupNode::handlePickupCup(const std::shared_ptr<msg_srv::srv::PickupCup::Req
 
         // check if hand is close enough to cup
 
-        std::cout << "x: " << t.transform.translation.x << std::endl;
-        std::cout << "Y: " << t.transform.translation.y << std::endl;
-        std::cout << "Z: " << t.transform.translation.z << std::endl;
-
         if (t.transform.translation.x < 0.1 && t.transform.translation.y < 0.1 && t.transform.translation.z < 0.1)
         {
             cupToHand();
             response->pickup_success = true;
         }
+    }
+    else
+    {
+        std::cout << "set isPickedup to false" << std::endl;
+
+        geometry_msgs::msg::TransformStamped newTransform;
+        try
+        {
+            newTransform = buffer.lookupTransform(simLink, cupLink, tf2::TimePointZero);
+        }
+        catch (tf2::ExtrapolationException &ex)
+        {
+            RCLCPP_ERROR(this->get_logger(), "Extrapolation Exception: %s", ex.what());
+            // Handle the exception as needed.
+        }
+
+        transform.transform = newTransform.transform;
+        transform.header.frame_id = simLink;
+
+        transform.transform.rotation.x = 0;
+        transform.transform.rotation.y = 0;
+        transform.transform.rotation.z = 0;
+        transform.transform.rotation.w = 1;
+
+        isPickedup = false;
     }
 }
 
@@ -152,6 +167,7 @@ void CupNode::cupToHand()
         RCLCPP_ERROR(this->get_logger(), "Extrapolation Exception: %s", ex.what());
         // Handle the exception as needed.
     }
+    isPickedup = true;
 
     transform.transform = newTransform.transform;
     transform.header.frame_id = targetFrameID;
@@ -160,7 +176,7 @@ void CupNode::cupToHand()
     transform.transform.translation.y = 0;
     transform.transform.translation.z = 0.045;
 
-    //rotate 90 degrees around z axis, but format in quaternions
+    // rotate -90/270 degrees around z axis, but format in quaternions. Now cup is standing up (not quite like a real cup)
 
     tf2::Quaternion q;
     q.setRPY(Utils::MathUtils::toRadians(0), Utils::MathUtils::toRadians(270), Utils::MathUtils::toRadians(0));
@@ -169,6 +185,35 @@ void CupNode::cupToHand()
     transform.transform.rotation.y = q.y();
     transform.transform.rotation.z = q.z();
     transform.transform.rotation.w = q.w();
+}
 
+void CupNode::applyGravity()
+{
+    if (isPickedup)
+    {
+        return;
+    }
 
+    if (transform.transform.translation.z <= 0.0)
+    {
+        transform.transform.translation.z = 0.0;
+        return;
+    }
+
+    // custom gravity to make cup fall slower and more visable
+    const float GRAVITY = 0.4;
+    const float UPDATES_PER_SECOND = 10;
+
+    // ignore mass and act as if cup is at terminal velocity (9.81 m/s)
+
+    float distance = GRAVITY / UPDATES_PER_SECOND;
+
+    if (transform.transform.translation.z - distance < 0.0)
+    {
+        transform.transform.translation.z = 0.0;
+    }
+    else
+    {
+        transform.transform.translation.z -= distance;
+    }
 }

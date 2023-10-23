@@ -37,6 +37,7 @@ private:
     void broadcastTf2();
 
     void cupToHand();
+    void applyGravity();
 
 private:
     const float MARKER_TF2_X_OFFSET = 0.03;
@@ -57,5 +58,5 @@ private:
     tf2_ros::TransformListener listener;
     tf2_ros::TransformBroadcaster broadcaster;
 
-    bool isPickedup = true;
+    bool isPickedup;
 };
