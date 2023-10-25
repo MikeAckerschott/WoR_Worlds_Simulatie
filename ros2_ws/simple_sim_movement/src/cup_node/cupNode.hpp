@@ -58,5 +58,7 @@ private:
     tf2_ros::TransformListener listener;
     tf2_ros::TransformBroadcaster broadcaster;
 
+    geometry_msgs::msg::TransformStamped handTransformOnPickup;
+
     bool isPickedup;
 };

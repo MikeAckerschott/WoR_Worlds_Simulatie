@@ -120,13 +120,17 @@ void CupNode::handlePickupCup(const std::shared_ptr<msg_srv::srv::PickupCup::Req
 
         // check if hand is close enough to cup
 
-        if (t.transform.translation.x < 0.1 && t.transform.translation.y < 0.1 && t.transform.translation.z < 0.1)
+        if (t.transform.translation.x < 0.05 && t.transform.translation.y < 0.05 && (t.transform.translation.z < 0.08 || t.transform.translation.z > -0.05))
         {
+            handTransformOnPickup = t;
+
             cupToHand();
             response->pickup_success = true;
-        } else {
-            std::cout<<"NOT CLOSE ENOUGH"<<std::endl;
-            std::cout<<"difference is: "<<t.transform.translation.x<<" "<<t.transform.translation.y<<" "<<t.transform.translation.z<<std::endl;
+        }
+        else
+        {
+            std::cout << "NOT CLOSE ENOUGH" << std::endl;
+            std::cout << "difference is: " << t.transform.translation.x << " " << t.transform.translation.y << " " << t.transform.translation.z << std::endl;
         }
     }
     else
@@ -176,19 +180,9 @@ void CupNode::cupToHand()
     transform.transform = newTransform.transform;
     transform.header.frame_id = targetFrameID;
 
-    transform.transform.translation.x = 0;
-    transform.transform.translation.y = 0;
-    transform.transform.translation.z = 0.045;
-
-    // rotate -90/270 degrees around z axis, but format in quaternions. Now cup is standing up (not quite like a real cup)
-
-    tf2::Quaternion q;
-    q.setRPY(Utils::MathUtils::toRadians(0), Utils::MathUtils::toRadians(270), Utils::MathUtils::toRadians(0));
-
-    transform.transform.rotation.x = q.x();
-    transform.transform.rotation.y = q.y();
-    transform.transform.rotation.z = q.z();
-    transform.transform.rotation.w = q.w();
+    transform.transform.translation.x = handTransformOnPickup.transform.translation.x;
+    transform.transform.translation.y = handTransformOnPickup.transform.translation.y;
+    transform.transform.translation.z = handTransformOnPickup.transform.translation.z;
 }
 
 void CupNode::applyGravity()
