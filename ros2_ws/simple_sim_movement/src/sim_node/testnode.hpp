@@ -36,6 +36,8 @@ private:
     void handleCupTransform();
 
     void initTF2();
+    void onClosedGripper();
+    void onOpenedGripper();
 
 private:
     std::string sim_link_, bot_link_, cup_link_;
@@ -44,6 +46,7 @@ private:
 
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
     rclcpp::Subscription<msg_srv::msg::RobotCommand>::SharedPtr robot_command_sub_;
+    
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::TimerBase::SharedPtr cupTransformTimer_;
     rclcpp::Client<msg_srv::srv::PickupCup>::SharedPtr pickupCupClient_;

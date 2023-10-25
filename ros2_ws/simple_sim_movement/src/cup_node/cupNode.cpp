@@ -99,6 +99,7 @@ void CupNode::handlePickupCup(const std::shared_ptr<msg_srv::srv::PickupCup::Req
                               const std::shared_ptr<msg_srv::srv::PickupCup::Response> response)
 {
     std::cout << "pickup cup" << std::endl;
+    response->pickup_success = false;
 
     if (request->pickup)
     {
@@ -123,6 +124,9 @@ void CupNode::handlePickupCup(const std::shared_ptr<msg_srv::srv::PickupCup::Req
         {
             cupToHand();
             response->pickup_success = true;
+        } else {
+            std::cout<<"NOT CLOSE ENOUGH"<<std::endl;
+            std::cout<<"difference is: "<<t.transform.translation.x<<" "<<t.transform.translation.y<<" "<<t.transform.translation.z<<std::endl;
         }
     }
     else

@@ -61,9 +61,13 @@ void TestNode::timerCallback()
                 joint_state_message_.position[servoCommand.channel] += Utils::MathUtils::toRadians(servoCommand.speedAnglePerSecond * 0.01);
                 currentCommandFinished = false;
             }
-            else
+            else if (servoCommand.channel == 5 && servoCommand.pulseWidth == 2500)
             {
-                joint_state_message_.position[servoCommand.channel] = Utils::MathUtils::toRadians(angleDestination);
+                onClosedGripper();
+            }
+            else if (servoCommand.channel == 5 && servoCommand.pulseWidth == 500)
+            {
+                onOpenedGripper();
             }
         }
         if (currentCommandFinished)
@@ -71,8 +75,47 @@ void TestNode::timerCallback()
             commandQueue.pop();
         }
     }
-
     publish_joint_state();
+}
+
+void TestNode::onClosedGripper()
+{
+    auto request = std::make_shared<msg_srv::srv::PickupCup::Request>();
+    request->pickup = true;
+
+    pickupCupClient_->async_send_request(
+        request,
+        [this](rclcpp::Client<msg_srv::srv::PickupCup>::SharedFuture result)
+        {
+            if (result.get()->pickup_success)
+            {
+                RCLCPP_INFO(this->get_logger(), "Result of pickup: %d", result.get()->pickup_success);
+            }
+            else
+            {
+                RCLCPP_INFO(this->get_logger(), "Cup not close enough");
+            }
+        });
+}
+
+void TestNode::onOpenedGripper()
+{
+    auto request = std::make_shared<msg_srv::srv::PickupCup::Request>();
+    request->pickup = false;
+
+    pickupCupClient_->async_send_request(
+        request,
+        [this](rclcpp::Client<msg_srv::srv::PickupCup>::SharedFuture result)
+        {
+            if (result.get()->pickup_success)
+            {
+                RCLCPP_INFO(this->get_logger(), "Result of dropping cup: %d", result.get()->pickup_success);
+            }
+            else
+            {
+                RCLCPP_INFO(this->get_logger(), "Cup not close enough");
+            }
+        });
 }
 
 void TestNode::handle_robot_command(const msg_srv::msg::RobotCommand::SharedPtr msg)
