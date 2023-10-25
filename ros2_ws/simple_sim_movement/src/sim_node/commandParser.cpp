@@ -37,9 +37,7 @@ std::vector<std::string> CommandParser::splitCommands(std::string &messageString
 int CommandParser::parseIntAfterChar(char delimiter, bool &isValid, std::string &messageString)
 {
     // this function ignores spaces
-    // std::cout << "finding " << delimiter << " in " << messageString << std::endl;
     int iterator = messageString.find(delimiter);
-    // std::cout << "found " << delimiter << " at " << iterator << std::endl;
     if (iterator == -1)
     {
         isValid = false;
@@ -85,7 +83,9 @@ int CommandParser::getChannel(std::string &messageString, bool &isChannel)
 
 int CommandParser::getPulseWidth(std::string &messageString, bool &isChannel)
 {
-    return parseIntAfterChar('P', isChannel, messageString);
+    int pulseWidth = parseIntAfterChar('P', isChannel, messageString);
+    isChannel = isChannel && pulseWidth >= 500 && pulseWidth <= 2500;
+    return pulseWidth;
 }
 
 int CommandParser::getDuration(std::string &messageString, bool &isChannel)
@@ -152,12 +152,6 @@ CommandParser::CompleteCommand CommandParser::parseCompleteCommand(std::string &
 
     std::vector<std::string> servoCommands = splitCommands(messageString);
 
-    std::cout << "split commands: " << std::endl;
-    for (auto command : servoCommands)
-    {
-        std::cout << command << std::endl;
-    }
-
     for (std::string servoCommand : servoCommands)
     {
         bool isValid = true;
@@ -165,6 +159,12 @@ CommandParser::CompleteCommand CommandParser::parseCompleteCommand(std::string &
         if (isValid)
         {
             command.servoCommands.push_back(parsedCommand);
+            if (parsedCommand.channel == ServoUtils::gripperLeft)
+            {
+                ServoCommand secondGripperCommand = parsedCommand;
+                secondGripperCommand.channel = ServoUtils::gripperRight;
+                command.servoCommands.push_back(secondGripperCommand);
+            }
         }
         else
         {
@@ -176,8 +176,6 @@ CommandParser::CompleteCommand CommandParser::parseCompleteCommand(std::string &
     }
 
     isValid = true;
-
-    std::cout << "parsed command. valid!: " << std::endl;
 
     return command;
 }
@@ -194,37 +192,25 @@ int CommandParser::calculateRealDuration(CompleteCommand &command, sensor_msgs::
     // calculate the time it takes to move from current position to desired position
     // if that time is greater than the current realDuration, set realDuration to that time
 
-    std::cout << command.servoCommands.size() << " commands" << std::endl;
-
     for (size_t i = 0; i < command.servoCommands.size(); ++i)
     {
-        std::cout << "COMMAND: " << std::endl;
         int channel = command.servoCommands.at(i).channel;
-        std::cout << "channel: " << channel << std::endl;
         int pulseWidth = command.servoCommands.at(i).pulseWidth;
-        std::cout << "pulseWidth: " << pulseWidth << std::endl;
         double speed = command.servoCommands.at(i).speedPWM;
-        std::cout << "speed: " << speed << std::endl;
 
         double currentPosition = robotPositionMessage_.position[channel];
-        std::cout << "currentPosition: " << currentPosition << std::endl;
 
-        std::cout << "current position: " << currentPosition << std::endl;
-        std::cout << "pulse width: " << pulseWidth << std::endl;
-
-        double desiredPosAsDegrees = ServoUtils::pwmToDegrees(pulseWidth);
+        double desiredPosAsDegrees = ServoUtils::pwmToDegrees(pulseWidth, channel);
         double currentPosAsDegrees = Utils::MathUtils::toDegrees(currentPosition);
-
-        std::cout << "desiredPosAsDegrees: " << desiredPosAsDegrees << std::endl;
-        std::cout << "currentPosAsDegrees: " << currentPosAsDegrees << std::endl;
 
         double distance = desiredPosAsDegrees - currentPosAsDegrees;
 
         double degreesPerSecond;
         if (command.servoCommands.at(i).usingSpeed)
         {
-            degreesPerSecond = ServoUtils::pwmPerSecondToDegreesPerSecond(speed);
-            if(distance < 0){
+            degreesPerSecond = ServoUtils::pwmPerSecondToDegreesPerSecond(speed, channel);
+            if (distance < 0)
+            {
                 degreesPerSecond *= -1;
             }
         }
@@ -234,10 +220,15 @@ int CommandParser::calculateRealDuration(CompleteCommand &command, sensor_msgs::
             degreesPerSecond = distance / durationAsSeconds;
         }
 
-        std::cout << "distance: " << distance << std::endl;
-        std::cout << "degrees per second: " << degreesPerSecond << std::endl;
+        if (degreesPerSecond > ServoUtils::getMaxSpeed(channel) || degreesPerSecond < -ServoUtils::getMaxSpeed(channel))
+        {
+            // set speed to max speed
+            degreesPerSecond = std::min(std::max(degreesPerSecond, -ServoUtils::getMaxSpeed(channel)), ServoUtils::getMaxSpeed(channel));
+        }
 
         command.servoCommands.at(i).speedAnglePerSecond = degreesPerSecond;
+
+        std::cout << "Servo " << channel << " will move at " << degreesPerSecond << " degrees per second" << std::endl;
 
         double timeToMove = (distance / degreesPerSecond) * 1000; // in milliseconds
 
@@ -245,12 +236,8 @@ int CommandParser::calculateRealDuration(CompleteCommand &command, sensor_msgs::
         {
             realDuration = timeToMove;
         }
-
-        std::cout << std::endl
-                  << std::endl;
     }
     // set the data in the command and return it for easier access
     command.duration = realDuration;
-    std::cout << "realDuration: " << realDuration << std::endl;
     return realDuration;
 }

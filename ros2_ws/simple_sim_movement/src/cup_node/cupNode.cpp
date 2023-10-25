@@ -16,14 +16,12 @@ CupNode::CupNode() : Node("cup_node"), buffer(this->get_clock()), listener(buffe
 void CupNode::publishMarker()
 {
     markerMsg.header.stamp = this->now();
-    RCLCPP_INFO(get_logger(), "Attempting to publish mesh");
 
     markerPub->publish(markerMsg);
 }
 
 void CupNode::timerCallback()
 {
-    std::cout << "publishing marker" << std::endl;
 
     applyGravity();
     publishMarker();
@@ -43,6 +41,8 @@ void CupNode::initMarker()
     {
         rclcpp::sleep_for(std::chrono::milliseconds(200));
     }
+
+    RCLCPP_INFO(get_logger(), "Rviz loaded!");
 
     // Creating the marker and initialising its fields
     // add offset to marker to negate bad model (probably?)
@@ -204,7 +204,7 @@ void CupNode::applyGravity()
     const float GRAVITY = 0.4;
     const float UPDATES_PER_SECOND = 10;
 
-    // ignore mass and act as if cup is at terminal velocity (9.81 m/s)
+    // ignore mass and act as if cup is at max speed
 
     float distance = GRAVITY / UPDATES_PER_SECOND;
 

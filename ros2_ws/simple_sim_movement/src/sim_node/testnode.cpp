@@ -50,22 +50,15 @@ void TestNode::timerCallback()
         {
             CommandParser::ServoCommand servoCommand = command.servoCommands[i];
 
-            double angleDestination = ServoUtils::pwmToDegrees(servoCommand.pulseWidth);
+            double angleDestination = ServoUtils::pwmToDegrees(servoCommand.pulseWidth, servoCommand.channel);
             double angleCurrent = Utils::MathUtils::toDegrees(joint_state_message_.position[servoCommand.channel]);
-
-            std::cout << "angleDestination: " << angleDestination << std::endl;
-            std::cout << "angleCurrent: " << angleCurrent << std::endl;
 
             double angleDifference = angleDestination - angleCurrent;
             double anglePerSecond = servoCommand.speedAnglePerSecond;
 
-            std::cout << "angleDifference: " << abs(angleDifference) << std::endl;
-            std::cout << "anglePerSecond: " << abs(anglePerSecond) << std::endl;
-
             if (abs(angleDifference) > abs(anglePerSecond * 0.01))
             {
                 joint_state_message_.position[servoCommand.channel] += Utils::MathUtils::toRadians(servoCommand.speedAnglePerSecond * 0.01);
-                std::cout << "moving servo " << servoCommand.channel << " to " << joint_state_message_.position[servoCommand.channel] << std::endl;
                 currentCommandFinished = false;
             }
             else
@@ -137,10 +130,6 @@ void TestNode::handleCupTransform()
         RCLCPP_WARN(this->get_logger(), "%s", ex.what());
         return;
     }
-
-    std::cout << "x: " << t.transform.translation.x << std::endl;
-    std::cout << "Y: " << t.transform.translation.y << std::endl;
-    std::cout << "Z: " << t.transform.translation.z << std::endl;
 }
 
 void TestNode::initTF2()
@@ -154,6 +143,4 @@ void TestNode::initTF2()
     t.transform.translation.z = 0.0;
 
     broadcaster_.sendTransform(t);
-
-    std::cout << "init tf2" << std::endl;
 }
