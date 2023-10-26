@@ -43,6 +43,7 @@ void TestNode::timerCallback()
 
     if (commandQueue.size() > 0)
     {
+
         CommandParser::CompleteCommand command = commandQueue.front();
         bool currentCommandFinished = true;
 
@@ -56,18 +57,30 @@ void TestNode::timerCallback()
             double angleDifference = angleDestination - angleCurrent;
             double anglePerSecond = servoCommand.speedAnglePerSecond;
 
-            if (abs(angleDifference) > abs(anglePerSecond * 0.01))
+            std::cout << "channel: " << servoCommand.channel << std::endl;
+            std::cout << "angle difference: " << angleDifference << std::endl;
+            std::cout << "angle per second: " << abs(anglePerSecond * 0.01) << std::endl
+                      << std::endl;
+
+            // if (servoCommand.channel == 5 || servoCommand.channel == 6)
+            // {
+
+            // } else
+            if (abs(angleDifference) > abs(anglePerSecond * 0.01) + ServoUtils::getMaxSpeed(servoCommand.channel) * 0.001)
             {
                 joint_state_message_.position[servoCommand.channel] += Utils::MathUtils::toRadians(servoCommand.speedAnglePerSecond * 0.01);
                 currentCommandFinished = false;
             }
-            else if (servoCommand.channel == 5 && servoCommand.pulseWidth == 2500)
+            else
             {
-                onClosedGripper();
-            }
-            else if (servoCommand.channel == 5 && servoCommand.pulseWidth == 500)
-            {
-                onOpenedGripper();
+                if (servoCommand.channel == 5 && servoCommand.pulseWidth == 2500)
+                {
+                    onClosedGripper();
+                }
+                else if (servoCommand.channel == 5 && servoCommand.pulseWidth == 500)
+                {
+                    onOpenedGripper();
+                }
             }
         }
         if (currentCommandFinished)

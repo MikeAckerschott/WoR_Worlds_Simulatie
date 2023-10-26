@@ -84,8 +84,8 @@ void CupNode::initTf2()
     transform.child_frame_id = cupLink;
     transform.header.stamp = this->now();
 
-    transform.transform.translation.x = 0.2;
-    transform.transform.translation.y = 0.1;
+    transform.transform.translation.x = 0.4;
+    transform.transform.translation.y = 0.0;
     transform.transform.translation.z = 0.0;
 
     broadcaster.sendTransform(transform);

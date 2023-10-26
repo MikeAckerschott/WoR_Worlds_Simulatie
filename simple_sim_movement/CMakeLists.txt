@@ -17,6 +17,7 @@ set(SIM_NODE_DIR "src/sim_node")
 set(UTILS_DIR "src/utils")
 set(CLI_NODE_DIR "src/cli_node")
 set(CUP_NODE_DIR "src/cup_node")
+set(DEMO_NODE_DIR "src/demo_node")
 
 set(SIM_NODE_SRC
   "${SIM_NODE_DIR}/main.cpp"
@@ -39,6 +40,10 @@ set(CUP_NODE_SRC
   "${CUP_NODE_DIR}/main.cpp"
 )
 
+set(DEMO_NODE_SRC
+  "${DEMO_NODE_DIR}/main.cpp"
+)
+
 add_executable(testing_node ${SIM_NODE_SRC} ${UTILS_SRC})
 ament_target_dependencies(testing_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_srv)
 
@@ -48,13 +53,18 @@ ament_target_dependencies(cli_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_
 add_executable(cup_node ${CUP_NODE_SRC} ${UTILS_SRC})
 ament_target_dependencies(cup_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_srv visualization_msgs)
 
+add_executable(demo_node ${DEMO_NODE_SRC})
+ament_target_dependencies(demo_node rclcpp msg_srv)
+
+
+
 install(
   DIRECTORY launch rviz urdf
   DESTINATION share/${PROJECT_NAME}
 )
 
 install(
-  TARGETS testing_node cli_node cup_node
+  TARGETS testing_node cli_node cup_node demo_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

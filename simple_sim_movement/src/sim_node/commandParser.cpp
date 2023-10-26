@@ -10,25 +10,24 @@ std::vector<std::string> CommandParser::splitCommands(std::string &messageString
     std::vector<std::string> commands;
     int iterator = 0;
 
-    // split string from first occurernce of # to the next occurence of # or end of string
-    while (messageString[iterator] != '\0')
+    int begin = messageString.find('#');
+    int end = messageString.find('#', begin + 1);
+
+    std::cout << "begin: " << begin << std::endl;
+    std::cout << "end: " << end << std::endl;
+
+    while (begin != std::string::npos)
     {
-        if (messageString[iterator] == '#')
+        if (end == std::string::npos)
         {
-            std::string command = "";
-            while (messageString[iterator] != '\0')
-            {
-                command += messageString[iterator];
-                iterator++;
-                if (messageString[iterator] == '#')
-                {
-                    --iterator;
-                    break;
-                }
-            }
-            commands.push_back(command);
+            end = messageString.size();
         }
-        iterator++;
+        std::string command = messageString.substr(begin, end - begin);
+        std::cout << "command: " << command << std::endl;
+        commands.push_back(command);
+        messageString.erase(begin, end - begin);
+        begin = messageString.find('#');
+        end = messageString.find('#', begin + 1);
     }
 
     return commands;
@@ -64,13 +63,22 @@ int CommandParser::parseIntAfterChar(char delimiter, bool &isValid, std::string 
         iterator++;
     }
 
-    if (messageString[iterator] == '\0' && chString.size() == 0)
+    // if (messageString[iterator] == '\0' && chString.size() == 0)
+    // {
+    //     isValid = false;
+    //     return -1;
+    // }
+
+    if (chString.size() == 0)
     {
         isValid = false;
         return -1;
     }
 
     // get integer value from char found at iterator
+    std::cout << "delimiter: '" << delimiter << "'" << std::endl;
+    std::cout << "chString: '" << chString << "'" << std::endl;
+
     int channel = stoi(chString);
     isValid = true;
     return channel;
@@ -119,7 +127,7 @@ CommandParser::ServoCommand CommandParser::parseServoCommand(std::string &messag
     }
     command.usingSpeed = isValid;
 
-    //translate AL5D channels to TF2 channels. 
+    // translate AL5D channels to TF2 channels.
     if (command.channel == ServoUtils::gripperServoAL5D)
     {
         command.channel = ServoUtils::gripperLeftTF2;
@@ -164,6 +172,7 @@ CommandParser::CompleteCommand CommandParser::parseCompleteCommand(std::string &
 
     for (std::string servoCommand : servoCommands)
     {
+        std::cout << "servoCommand: '" << servoCommand << "'" << std::endl;
         bool isValid = true;
         auto parsedCommand = parseServoCommand(servoCommand, isValid, usingDuration);
         if (isValid)
