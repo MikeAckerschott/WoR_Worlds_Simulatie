@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, ExecuteProcess
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.substitutions import FindPackageShare
 from launch_ros.actions import Node
@@ -49,12 +49,27 @@ def generate_launch_description():
             output="screen",
             emulate_tty=True,
         ),
+
         Node(
             package='rviz2',
             executable='rviz2',
             name='rviz2',
             output='screen',
             arguments=['-d', rviz_config]),
+        Node(
+            package="simple_sim_movement",
+            executable="cup_node",
+            name="custom_cup_node",
+            output="screen",
+            emulate_tty=True,
+        ),
+
+        ExecuteProcess(
+            cmd=['gnome-terminal', '--', 'ros2', 'run',
+                 'simple_sim_movement', 'cli_node'],
+            name='cli_node_terminal',
+            output='screen',
+        ),
     ])
 
     return ld
