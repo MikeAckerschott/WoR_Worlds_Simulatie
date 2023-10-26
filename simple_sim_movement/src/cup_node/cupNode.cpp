@@ -10,7 +10,9 @@ CupNode::CupNode() : Node("cup_node"), buffer(this->get_clock()), listener(buffe
     auto qos = rclcpp::QoS(1000);
 
     markerPub = create_publisher<visualization_msgs::msg::Marker>(topic, qos);
+    posPub = create_publisher<msg_srv::msg::Pos>("cup_pos", qos);
     pickupCupService = create_service<msg_srv::srv::PickupCup>("pickup_cup", std::bind(&CupNode::handlePickupCup, this, std::placeholders::_1, std::placeholders::_2));
+
 }
 
 void CupNode::publishMarker()
@@ -26,6 +28,7 @@ void CupNode::timerCallback()
     applyGravity();
     publishMarker();
     broadcastTf2();
+    publishCupPos();
 }
 
 void CupNode::initMarker()
@@ -214,4 +217,26 @@ void CupNode::applyGravity()
     {
         transform.transform.translation.z -= distance;
     }
+}
+
+void CupNode::publishCupPos(){
+    msg_srv::msg::Pos posMsg;
+
+    geometry_msgs::msg::TransformStamped newTransform;
+
+    try
+    {
+        newTransform = buffer.lookupTransform(simLink, cupLink, tf2::TimePointZero);
+    }
+    catch (tf2::ExtrapolationException &ex)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Extrapolation Exception: %s", ex.what());
+        // Handle the exception as needed.
+    }
+
+    posMsg.x = newTransform.transform.translation.x;
+    posMsg.y = newTransform.transform.translation.y;
+    posMsg.z = newTransform.transform.translation.z;
+
+    posPub->publish(posMsg);
 }

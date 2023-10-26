@@ -7,6 +7,7 @@
 #include "tf2_ros/buffer.h"
 
 #include "msg_srv/srv/pickup_cup.hpp"
+#include "msg_srv/msg/pos.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 
 #include "../utils/mathUtils.hpp"
@@ -39,6 +40,8 @@ private:
     void cupToHand();
     void applyGravity();
 
+    void publishCupPos();
+
 private:
     const float MARKER_TF2_X_OFFSET = 0.03;
     const float MARKER_TF2_Y_OFFSET = 0.01;
@@ -46,6 +49,7 @@ private:
     std::string simLink, botLink, cupLink;
 
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr markerPub;
+    rclcpp::Publisher<msg_srv::msg::Pos>::SharedPtr posPub;
     rclcpp::Service<msg_srv::srv::PickupCup>::SharedPtr pickupCupService;
     visualization_msgs::msg::Marker markerMsg;
     geometry_msgs::msg::Pose pose;

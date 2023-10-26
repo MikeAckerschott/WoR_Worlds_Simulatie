@@ -18,6 +18,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ServoCommand.msg"
   "msg/State.msg"
   "msg/RobotCommand.msg"
+  "msg/Pos.msg"
   "srv/SingleServoCommand.srv"
   "srv/MultiServoCommand.srv"
   "srv/EmergencyStop.srv"
