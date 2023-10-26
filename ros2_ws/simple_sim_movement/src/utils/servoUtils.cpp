@@ -12,8 +12,12 @@ short ServoUtils::maxServo = 5;
 double ServoUtils::maxSpeed = 360;
 double ServoUtils::maxGripperSpeed = 1.7;
 
-short ServoUtils::gripperLeft = 5;
-short ServoUtils::gripperRight = 6;
+short ServoUtils::gripperLeftTF2 = 5;
+short ServoUtils::gripperRightTF2 = 6;
+short ServoUtils::gripperServoAL5D = 4;
+
+short ServoUtils::wristServoAL5D = 5;
+short ServoUtils::wristServoTF2 = 4;
 
 double ServoUtils::pwmToDegrees(int pwmDurationUs, short servo)
 {
@@ -22,7 +26,7 @@ double ServoUtils::pwmToDegrees(int pwmDurationUs, short servo)
     const double maxPwmUs = 2500.0; // Maximum PWM duration for +90 degrees
     const int centerPwmUs = 1500;   // Center position corresponds to 0 degrees
 
-    if (servo == ServoUtils::gripperLeft || servo == ServoUtils::gripperRight)
+    if (servo == ServoUtils::gripperLeftTF2 || servo == ServoUtils::gripperRightTF2)
     {
         return pwmToDegreesGripper(pwmDurationUs);
     }
@@ -53,7 +57,7 @@ double ServoUtils::pwmPerSecondToDegreesPerSecond(int pwmPerSecond, short servo)
     const double maxPwmUs = 2500.0; // Maximum PWM duration for +90 degrees
     const int centerPwmUs = 1500;   // Center position corresponds to 0 degrees
 
-    if (servo == gripperLeft || servo == gripperRight)
+    if (servo == gripperLeftTF2 || servo == gripperRightTF2)
     {
         return pwmToDegrees(pwmPerSecond + minPwmUs, servo); // minPwmUs (500) is fully open, maxPwmUs (2500) is fully closed
     }
@@ -137,7 +141,7 @@ double ServoUtils::degreesToPwm(int servo, double degrees)
 
 double ServoUtils::getMaxSpeed(short servo)
 {
-    if (servo == gripperLeft || servo == gripperRight)
+    if (servo == gripperLeftTF2 || servo == gripperRightTF2)
     {
         return maxGripperSpeed;
     }

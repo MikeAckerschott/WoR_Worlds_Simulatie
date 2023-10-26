@@ -48,16 +48,13 @@ ament_target_dependencies(cli_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_
 add_executable(cup_node ${CUP_NODE_SRC} ${UTILS_SRC})
 ament_target_dependencies(cup_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_srv visualization_msgs)
 
-add_executable(marker_testing src/testingMarker/meshPub.cpp)
-ament_target_dependencies(marker_testing rclcpp tf2_ros geometry_msgs sensor_msgs msg_srv visualization_msgs)
-
 install(
   DIRECTORY launch rviz urdf
   DESTINATION share/${PROJECT_NAME}
 )
 
 install(
-  TARGETS testing_node cli_node cup_node marker_testing
+  TARGETS testing_node cli_node cup_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

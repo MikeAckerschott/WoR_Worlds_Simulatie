@@ -119,6 +119,16 @@ CommandParser::ServoCommand CommandParser::parseServoCommand(std::string &messag
     }
     command.usingSpeed = isValid;
 
+    //translate AL5D channels to TF2 channels. 
+    if (command.channel == ServoUtils::gripperServoAL5D)
+    {
+        command.channel = ServoUtils::gripperLeftTF2;
+    }
+    else if (command.channel == ServoUtils::wristServoAL5D)
+    {
+        command.channel = ServoUtils::wristServoTF2;
+    }
+
     isValid = true;
     return command;
 }
@@ -159,10 +169,10 @@ CommandParser::CompleteCommand CommandParser::parseCompleteCommand(std::string &
         if (isValid)
         {
             command.servoCommands.push_back(parsedCommand);
-            if (parsedCommand.channel == ServoUtils::gripperLeft)
+            if (parsedCommand.channel == ServoUtils::gripperLeftTF2)
             {
                 ServoCommand secondGripperCommand = parsedCommand;
-                secondGripperCommand.channel = ServoUtils::gripperRight;
+                secondGripperCommand.channel = ServoUtils::gripperRightTF2;
                 command.servoCommands.push_back(secondGripperCommand);
             }
         }

@@ -93,12 +93,27 @@ public:
   /**
    * @brief TF2 joint for left gripper
    */
-  static short gripperRight;
+  static short gripperRightTF2;
 
   /**
    * @brief TF2 joint for right gripper
    */
-  static short gripperLeft;
+  static short gripperLeftTF2;
+
+  /**
+   * @brief the servo nr for the gripper on the AL5D
+   */
+  static short gripperServoAL5D;
+
+  /**
+   * @brief the servo nr for the wrist on the AL5D
+   */
+  static short wristServoAL5D;
+
+  /**
+   * @brief the servo nr for the wrist on the TF2
+   */
+  static short wristServoTF2;
 
   /**
    * @brief vector that stores the range of motion for each servo
