@@ -33,7 +33,7 @@ void CupNode::initMarker()
     // Getting the model file path:
     auto package_share_directory = ament_index_cpp::get_package_share_directory("simple_sim_movement");
     std::string base_frame = "base_link";
-    auto file_name = "file://" + package_share_directory + "/../../../../simple_sim_movement" + "/stl/cup.stl";
+    auto file_name = "file://" + package_share_directory + "/../../../../wor__worlds_simulatie/simple_sim_movement" + "/stl/cup.stl";
 
     RCLCPP_INFO(get_logger(), "Waiting for Rviz to load...");
 
