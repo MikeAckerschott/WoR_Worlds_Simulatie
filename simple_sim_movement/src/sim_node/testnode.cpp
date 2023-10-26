@@ -57,11 +57,6 @@ void TestNode::timerCallback()
             double angleDifference = angleDestination - angleCurrent;
             double anglePerSecond = servoCommand.speedAnglePerSecond;
 
-            std::cout << "channel: " << servoCommand.channel << std::endl;
-            std::cout << "angle difference: " << angleDifference << std::endl;
-            std::cout << "angle per second: " << abs(anglePerSecond * 0.01) << std::endl
-                      << std::endl;
-
             // if (servoCommand.channel == 5 || servoCommand.channel == 6)
             // {
 
@@ -148,7 +143,7 @@ void TestNode::handle_robot_command(const msg_srv::msg::RobotCommand::SharedPtr 
 
     if (isValid)
     {
-        std::cout << "added command to queue" << std::endl;
+        emptyQueue();
         commandQueue.push(command);
     }
     else

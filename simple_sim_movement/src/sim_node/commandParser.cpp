@@ -13,9 +13,6 @@ std::vector<std::string> CommandParser::splitCommands(std::string &messageString
     int begin = messageString.find('#');
     int end = messageString.find('#', begin + 1);
 
-    std::cout << "begin: " << begin << std::endl;
-    std::cout << "end: " << end << std::endl;
-
     while (begin != std::string::npos)
     {
         if (end == std::string::npos)
@@ -23,7 +20,6 @@ std::vector<std::string> CommandParser::splitCommands(std::string &messageString
             end = messageString.size();
         }
         std::string command = messageString.substr(begin, end - begin);
-        std::cout << "command: " << command << std::endl;
         commands.push_back(command);
         messageString.erase(begin, end - begin);
         begin = messageString.find('#');
@@ -51,23 +47,15 @@ int CommandParser::parseIntAfterChar(char delimiter, bool &isValid, std::string 
         if (messageString[iterator] == ' ')
         {
             iterator++;
-            // std::cout<<"found space, skipping..."<<std::endl;
             continue;
         }
         if (messageString[iterator] < '0' || messageString[iterator] > '9')
         {
-            // std::cout<<"found non-numeric value, breaking..."<<std::endl;
             break;
         }
         chString += messageString[iterator];
         iterator++;
     }
-
-    // if (messageString[iterator] == '\0' && chString.size() == 0)
-    // {
-    //     isValid = false;
-    //     return -1;
-    // }
 
     if (chString.size() == 0)
     {
@@ -76,8 +64,6 @@ int CommandParser::parseIntAfterChar(char delimiter, bool &isValid, std::string 
     }
 
     // get integer value from char found at iterator
-    std::cout << "delimiter: '" << delimiter << "'" << std::endl;
-    std::cout << "chString: '" << chString << "'" << std::endl;
 
     int channel = stoi(chString);
     isValid = true;
@@ -172,7 +158,6 @@ CommandParser::CompleteCommand CommandParser::parseCompleteCommand(std::string &
 
     for (std::string servoCommand : servoCommands)
     {
-        std::cout << "servoCommand: '" << servoCommand << "'" << std::endl;
         bool isValid = true;
         auto parsedCommand = parseServoCommand(servoCommand, isValid, usingDuration);
         if (isValid)
