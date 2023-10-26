@@ -6,7 +6,6 @@
 #include "tf2_ros/buffer.h"
 
 #include "sensor_msgs/msg/joint_state.hpp"
-#include "geometry_msgs/msg/point.hpp"
 
 #include "msg_srv/srv/pickup_cup.hpp"
 
@@ -55,7 +54,6 @@ private:
 
     std::queue<CommandParser::CompleteCommand> commandQueue;
 
-    geometry_msgs::msg::TransformStamped transform_;
     tf2_ros::Buffer buffer_;
     tf2_ros::TransformListener listener_;
     tf2_ros::TransformBroadcaster broadcaster_;
