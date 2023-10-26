@@ -6,13 +6,17 @@ CupNode::CupNode() : Node("cup_node"), buffer(this->get_clock()), listener(buffe
     initMarker();
     timer = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&CupNode::timerCallback, this));
 
+    lastPos.x = 0;
+    lastPos.y = 0;
+    lastPos.z = 0;
+
     std::string topic = "/visualization_marker";
     auto qos = rclcpp::QoS(1000);
 
+    speedPub = create_publisher<msg_srv::msg::Pos>("cup_speed", qos);
     markerPub = create_publisher<visualization_msgs::msg::Marker>(topic, qos);
     posPub = create_publisher<msg_srv::msg::Pos>("cup_pos", qos);
     pickupCupService = create_service<msg_srv::srv::PickupCup>("pickup_cup", std::bind(&CupNode::handlePickupCup, this, std::placeholders::_1, std::placeholders::_2));
-
 }
 
 void CupNode::publishMarker()
@@ -28,6 +32,7 @@ void CupNode::timerCallback()
     applyGravity();
     publishMarker();
     broadcastTf2();
+    publishCupSpeed();
     publishCupPos();
 }
 
@@ -125,6 +130,10 @@ void CupNode::handlePickupCup(const std::shared_ptr<msg_srv::srv::PickupCup::Req
         if (t.transform.translation.x < 0.05 && t.transform.translation.y < 0.05 && (t.transform.translation.z < 0.08 || t.transform.translation.z > -0.05))
         {
             handTransformOnPickup = t;
+            markerMsg.color.a = 1;
+            markerMsg.color.b = 1;
+            markerMsg.color.r = 0;
+            markerMsg.color.g = 0;
 
             cupToHand();
             response->pickup_success = true;
@@ -151,6 +160,11 @@ void CupNode::handlePickupCup(const std::shared_ptr<msg_srv::srv::PickupCup::Req
         transform.transform.rotation.y = 0;
         transform.transform.rotation.z = 0;
         transform.transform.rotation.w = 1;
+
+        markerMsg.color.a = 1;
+        markerMsg.color.r = 1;
+        markerMsg.color.g = 0;
+        markerMsg.color.b = 0;
 
         isPickedup = false;
     }
@@ -212,7 +226,8 @@ void CupNode::applyGravity()
     }
 }
 
-void CupNode::publishCupPos(){
+void CupNode::publishCupPos()
+{
     msg_srv::msg::Pos posMsg;
 
     geometry_msgs::msg::TransformStamped newTransform;
@@ -232,4 +247,28 @@ void CupNode::publishCupPos(){
     posMsg.z = newTransform.transform.translation.z;
 
     posPub->publish(posMsg);
+    lastPos = posMsg;
+}
+
+void CupNode::publishCupSpeed(){
+    msg_srv::msg::Pos speedMsg;
+
+    geometry_msgs::msg::TransformStamped newTransform;
+
+    try
+    {
+        newTransform = buffer.lookupTransform(simLink, cupLink, tf2::TimePointZero);
+    }
+    catch (tf2::ExtrapolationException &ex)
+    {
+        RCLCPP_ERROR(this->get_logger(), "Extrapolation Exception: %s", ex.what());
+        // Handle the exception as needed.
+    }
+
+    speedMsg.x = newTransform.transform.translation.x - lastPos.x;
+    speedMsg.y = newTransform.transform.translation.y - lastPos.y;
+    speedMsg.z = newTransform.transform.translation.z - lastPos.z;
+
+    speedPub->publish(speedMsg);
+    lastPos = speedMsg;
 }

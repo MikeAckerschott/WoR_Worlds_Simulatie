@@ -41,12 +41,15 @@ private:
     void applyGravity();
 
     void publishCupPos();
+    void publishCupSpeed();
 
 private:
     std::string simLink, botLink, cupLink;
 
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr markerPub;
     rclcpp::Publisher<msg_srv::msg::Pos>::SharedPtr posPub;
+    rclcpp::Publisher<msg_srv::msg::Pos>::SharedPtr speedPub;
+    msg_srv::msg::Pos lastPos;
     rclcpp::Service<msg_srv::srv::PickupCup>::SharedPtr pickupCupService;
     visualization_msgs::msg::Marker markerMsg;
     geometry_msgs::msg::Pose pose;
