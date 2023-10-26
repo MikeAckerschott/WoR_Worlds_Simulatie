@@ -25,14 +25,14 @@ public:
 
     virtual ~CupNode() = default;
 
-    void publishMarker();
-
-    void timerCallback();
-
 private:
     void initMarker();
     void initTf2();
     void markerToTf2();
+
+    void publishMarker();
+
+    void timerCallback();
 
     void handlePickupCup(const std::shared_ptr<msg_srv::srv::PickupCup::Request> request, const std::shared_ptr<msg_srv::srv::PickupCup::Response> response);
     void broadcastTf2();
@@ -43,9 +43,6 @@ private:
     void publishCupPos();
 
 private:
-    const float MARKER_TF2_X_OFFSET = 0.03;
-    const float MARKER_TF2_Y_OFFSET = 0.01;
-
     std::string simLink, botLink, cupLink;
 
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr markerPub;

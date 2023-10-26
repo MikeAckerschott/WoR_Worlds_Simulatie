@@ -53,9 +53,6 @@ ament_target_dependencies(cli_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_
 add_executable(cup_node ${CUP_NODE_SRC} ${UTILS_SRC})
 ament_target_dependencies(cup_node rclcpp tf2_ros geometry_msgs sensor_msgs msg_srv visualization_msgs)
 
-add_executable(demo_node ${DEMO_NODE_SRC})
-ament_target_dependencies(demo_node rclcpp msg_srv)
-
 
 
 install(
@@ -64,7 +61,7 @@ install(
 )
 
 install(
-  TARGETS testing_node cli_node cup_node demo_node
+  TARGETS testing_node cli_node cup_node
   DESTINATION lib/${PROJECT_NAME}
 )
 

@@ -25,9 +25,6 @@ public:
 
     virtual ~TestNode() = default;
 
-    void emptyQueue();
-    void skipCurrentCommand();
-
 private:
     void handle_robot_command(const msg_srv::msg::RobotCommand::SharedPtr msg);
     void publish_joint_state();
@@ -39,6 +36,9 @@ private:
     void onClosedGripper();
     void onOpenedGripper();
 
+    void emptyQueue();
+    void skipCurrentCommand();
+
 private:
     std::string sim_link_, bot_link_, cup_link_;
 
@@ -46,7 +46,7 @@ private:
 
     rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_state_pub_;
     rclcpp::Subscription<msg_srv::msg::RobotCommand>::SharedPtr robot_command_sub_;
-    
+
     rclcpp::TimerBase::SharedPtr timer_;
     rclcpp::TimerBase::SharedPtr cupTransformTimer_;
     rclcpp::Client<msg_srv::srv::PickupCup>::SharedPtr pickupCupClient_;
@@ -54,7 +54,6 @@ private:
     CommandParser parser;
 
     std::queue<CommandParser::CompleteCommand> commandQueue;
-
 
     geometry_msgs::msg::TransformStamped transform_;
     tf2_ros::Buffer buffer_;
