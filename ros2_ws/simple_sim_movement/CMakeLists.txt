@@ -11,9 +11,13 @@ find_package(visualization_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(tf2 REQUIRED)
+find_package(std_msgs REQUIRED)
 
 add_executable(testing_node src/main.cpp src/testnode.cpp src/mathUtils.cpp)
-ament_target_dependencies(testing_node rclcpp tf2_ros geometry_msgs sensor_msgs)
+ament_target_dependencies(testing_node rclcpp tf2_ros geometry_msgs sensor_msgs std_msgs) 
+
+add_executable(cup_publisher src/cup_main.cpp src/CupStatePublisher.cpp src/mathUtils.cpp)
+ament_target_dependencies(cup_publisher rclcpp tf2_ros geometry_msgs sensor_msgs std_msgs)
 
 install(
   DIRECTORY launch rviz urdf
@@ -22,6 +26,11 @@ install(
 
 install(
   TARGETS testing_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  TARGETS cup_publisher
   DESTINATION lib/${PROJECT_NAME}
 )
 

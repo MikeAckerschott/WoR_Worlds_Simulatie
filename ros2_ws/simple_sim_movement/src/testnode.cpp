@@ -32,6 +32,8 @@ void TestNode::publish_joint_state()
 }
 
 void TestNode::timerCallback(){
-    joint_state_message_.position[0] += Utils::MathUtils::toRadians(1);
+    //This will rotate the base of the robot
+    
+    // joint_state_message_.position[0] += Utils::MathUtils::toRadians(1);
     publish_joint_state();
 }
