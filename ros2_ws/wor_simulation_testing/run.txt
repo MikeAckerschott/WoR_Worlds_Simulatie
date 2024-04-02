@@ -1,1 +1,0 @@
-ros2 launch wor_simulation_testing display.launch.py model:=urdf/lynxmotion_arm.urdf gui:=false
