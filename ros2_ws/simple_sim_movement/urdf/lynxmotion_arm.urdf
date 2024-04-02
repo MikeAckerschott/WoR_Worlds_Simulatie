@@ -1,10 +1,11 @@
-<robot name="lynxmotion_arm">
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="lynxmotion_arm">
 	<link name="base_link">
 		<visual>
 			<geometry>
 				<cylinder length="0.04" radius="0.095" />
 			</geometry>
-			<material name="black">
+			<material name="red">
 				<color rgba="0 0 0 1" />
 			</material>
 			<origin xyz="0 0 0.02" rpy="0 0 0" />
@@ -15,7 +16,7 @@
 			<geometry>
 				<cylinder length="0.005" radius="0.095" />
 			</geometry>
-			<material name="black" />
+			<material name="gray" />
 		</visual>
 	</link>
 	<link name="upperarm">
@@ -23,7 +24,7 @@
 			<geometry>			
 				<box size="0.02 0.08 0.18" />
 			</geometry>
-			<material name="black" />
+			<material name="red" />
 			<origin xyz="0 0 0.09" rpy="0 0 0" />
 		</visual>	
 	</link>
@@ -32,7 +33,7 @@
 			<geometry>
 				<cylinder length="0.20" radius="0.015" />
 			</geometry>
-			<material name="silver" >
+			<material name="gray" >
 				<color rgba="0.9 0.9 0.9 1" />
 			</material>
 			<origin xyz="0 0 0.10" rpy="0 0 0" />
@@ -43,7 +44,7 @@
 			<geometry>			
 				<box size="0.02 0.05 0.06" />
 			</geometry>
-			<material name="black" />
+			<material name="gray" />
 			<origin xyz="0 0 0.03" rpy="0 0 0" />
 		</visual>
 	</link>
@@ -52,7 +53,7 @@
 			<geometry>
 				<box size="0.02 0.07 0.025" />
 			</geometry>
-			<material name="black" />
+			<material name="gray" />
 			<origin xyz="0 0 0.0125" rpy="0 0 0" />
 		</visual>
 	</link>
@@ -76,35 +77,40 @@
 			<material name="gray" />
 		</visual>
 	</link>
-	<joint name="base_link2turret" type="continuous">
+	<joint name="base_link2turret" type="revolute">
 		<parent link="base_link" />
 		<child link="turret" />
 		<origin xyz="0 0 0.045" rpy="0 0 0" />
 		<axis xyz="0 0 -1" />
+		<limit effort="1000.0" lower="-1.5" upper="1.5" velocity="3.1416" />
 	</joint>
-	<joint name="turret2upperarm" type="continuous">
+	<joint name="turret2upperarm" type="revolute">
 		<parent link="turret" />
 		<child link="upperarm" />
 		<origin xyz="0 0 0.02" rpy="0 0 0" />
 		<axis xyz="0 -1 0" />
+		<limit effort="1000.0" lower="-1.5" upper="1.5" velocity="3.1416" />
 	</joint>
-	<joint name="upperarm2forearm" type="continuous">
+	<joint name="upperarm2forearm" type="revolute">
 		<parent link="upperarm" />
 		<child link="forearm" />
 		<origin xyz="0 0 0.18" rpy="0 1.5708 0" />
 		<axis xyz="0 1 0" />
+		<limit effort="1000.0" lower="-1.5" upper="1.5" velocity="3.1416" />
 	</joint>
-	<joint name="forearm2wrist" type="continuous">
+	<joint name="forearm2wrist" type="revolute">
 		<parent link="forearm" />
 		<child link="wrist" />
 		<origin xyz="0 0 0.20" rpy="0 0 0" />
 		<axis xyz="0 -1 0" />
+		<limit effort="1000.0" lower="-1.5" upper="1.5" velocity="3.1416" />
 	</joint>
-	<joint name="wrist2hand" type="continuous">
+	<joint name="wrist2hand" type="revolute">
 		<parent link="wrist" />
 		<child link="hand" />
 		<origin xyz="0 0 0.06" rpy="0 0 0" />
 		<axis xyz="0 0 1" />
+		<limit effort="1000.0" lower="-1.5" upper="1.5" velocity="3.1416" />
 	</joint>
 	<joint name="gripper_left2hand" type="prismatic">
 		<parent link="hand" />
